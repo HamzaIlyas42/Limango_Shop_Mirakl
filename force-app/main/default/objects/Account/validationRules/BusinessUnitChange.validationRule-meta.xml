@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BusinessUnitChange</fullName>
+    <active>true</active>
+    <description>It is not allowed to change BU to a single value, if record belongs to multiple BU&apos;s</description>
+    <errorConditionFormula>(
+  ISPICKVAL(PRIORVALUE(BusinessUnit__c), &quot;MarketplaceAdSales&quot;) ||
+  ISPICKVAL(PRIORVALUE(BusinessUnit__c), &quot;MarketplaceRetail&quot;) ||
+  ISPICKVAL(PRIORVALUE(BusinessUnit__c), &quot;All&quot;) ||
+  ISPICKVAL(PRIORVALUE(BusinessUnit__c), &quot;RetailAdSales&quot;)
+) &amp;&amp;
+(
+  ISPICKVAL(BusinessUnit__c, &quot;Marketplace&quot;) ||
+  ISPICKVAL(BusinessUnit__c, &quot;Retail&quot;) ||
+  ISPICKVAL(BusinessUnit__c, &quot;AdSales&quot;)
+) &amp;&amp;
+$Profile.Name &lt;&gt; &quot;System Administrator&quot;</errorConditionFormula>
+    <errorMessage>Record business unit can not be changed back to a single BU value</errorMessage>
+</ValidationRule>

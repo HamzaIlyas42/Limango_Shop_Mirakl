@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BillingFrequency__c</fullName>
+    <label>Billing frequency</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>monthly</fullName>
+                <default>true</default>
+                <label>Once per month</label>
+            </value>
+            <value>
+                <fullName>biweekly</fullName>
+                <default>false</default>
+                <label>Twice per month</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

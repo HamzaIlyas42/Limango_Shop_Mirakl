@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BusinessUnitAdSalesContact__c</fullName>
+    <description>Used for AdSales only</description>
+    <label>Business Unit AdSales Contact</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Retail</fullName>
+                <default>false</default>
+                <label>Retail</label>
+            </value>
+            <value>
+                <fullName>Marketplace</fullName>
+                <default>false</default>
+                <label>Marketplace</label>
+            </value>
+            <value>
+                <fullName>MarketplaceRetail</fullName>
+                <default>false</default>
+                <label>Marketplace + Retail</label>
+            </value>
+            <value>
+                <fullName>extern</fullName>
+                <default>false</default>
+                <label>extern</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

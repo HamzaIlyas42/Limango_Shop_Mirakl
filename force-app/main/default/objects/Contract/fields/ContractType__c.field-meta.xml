@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ContractType__c</fullName>
+    <label>Contract Type</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Block</fullName>
+                <default>false</default>
+                <label>Block</label>
+            </value>
+            <value>
+                <fullName>Preemption</fullName>
+                <default>false</default>
+                <label>Preemption</label>
+            </value>
+            <value>
+                <fullName>BlockPreemption</fullName>
+                <default>false</default>
+                <label>Block &amp; Preemption</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

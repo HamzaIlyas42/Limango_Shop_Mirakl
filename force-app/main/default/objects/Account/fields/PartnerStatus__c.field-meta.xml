@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PartnerStatus__c</fullName>
+    <label>Partner Status</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>NewPartner</fullName>
+                <default>false</default>
+                <label>New Partner</label>
+            </value>
+            <value>
+                <fullName>BaselinePartner</fullName>
+                <default>false</default>
+                <label>Baseline Partner</label>
+            </value>
+            <value>
+                <fullName>CampaignPartner</fullName>
+                <default>false</default>
+                <label>Campaign Partner</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

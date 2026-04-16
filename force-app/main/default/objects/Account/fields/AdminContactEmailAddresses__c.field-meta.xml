@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdminContactEmailAddresses__c</fullName>
+    <description>Help field for the power automate integration</description>
+    <externalId>false</externalId>
+    <formula>TRIM(
+Admincontact__r.Email &amp;
+IF(NOT(ISBLANK(AdminContact2__r.Email)), &quot;; &quot; &amp; AdminContact2__r.Email, &quot;&quot;) &amp;
+IF(NOT(ISBLANK(AdminContact3__r.Email)), &quot;; &quot; &amp; AdminContact3__r.Email, &quot;&quot;)
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Admin contact email addresses</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

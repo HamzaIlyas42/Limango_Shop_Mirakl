@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdSales_Accounting_Email_Adresses__c</fullName>
+    <description>Field to list all email addresses belonging to the account that have the role/function AdSales Accounting. The field is triggered by the flow LIM_Contact_mergeAdSalesAccounting_Changes.</description>
+    <label>AdSales Accounting Email Adresses</label>
+    <length>32768</length>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
+</CustomField>

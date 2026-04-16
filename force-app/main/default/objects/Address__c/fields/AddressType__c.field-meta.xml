@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AddressType__c</fullName>
+    <label>Address Type</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>true</sorted>
+            <value>
+                <fullName>AddressForReturns</fullName>
+                <default>false</default>
+                <label>Address for Returns</label>
+            </value>
+            <value>
+                <fullName>AddressOfWarehouse</fullName>
+                <default>false</default>
+                <label>Address of Warehouse</label>
+            </value>
+            <value>
+                <fullName>AdSalesAccounting</fullName>
+                <default>false</default>
+                <label>AdSales Accounting</label>
+            </value>
+            <value>
+                <fullName>Headquarter</fullName>
+                <default>false</default>
+                <label>Headquarter</label>
+            </value>
+            <value>
+                <fullName>InvoiceAddress</fullName>
+                <default>false</default>
+                <label>Invoice Address</label>
+            </value>
+            <value>
+                <fullName>SupplierShippingAddress</fullName>
+                <default>false</default>
+                <label>Supplier Shipping Address</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

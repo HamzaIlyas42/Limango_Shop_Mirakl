@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Carrierhandovertime__c</fullName>
+    <label>Carrier handover time</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>24h</fullName>
+                <default>true</default>
+                <label>24h</label>
+            </value>
+            <value>
+                <fullName>48h</fullName>
+                <default>false</default>
+                <label>48h</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

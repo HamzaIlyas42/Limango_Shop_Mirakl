@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RoleMarketplace__c</fullName>
+    <description>Roles only for Marketplace.</description>
+    <label>Role Marketplace</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Sales Contact</fullName>
+                <default>false</default>
+                <label>Sales Contact</label>
+            </value>
+            <value>
+                <fullName>Tech Contact</fullName>
+                <default>false</default>
+                <label>Tech Contact</label>
+            </value>
+            <value>
+                <fullName>Key Account Contact</fullName>
+                <default>false</default>
+                <label>Key Account Contact</label>
+            </value>
+            <value>
+                <fullName>Ad Sales Manager</fullName>
+                <default>false</default>
+                <label>Ad Sales Manager</label>
+            </value>
+            <value>
+                <fullName>Ad Sales Accounting</fullName>
+                <default>false</default>
+                <label>Ad Sales Accounting</label>
+            </value>
+            <value>
+                <fullName>Mirakl Invitation</fullName>
+                <default>false</default>
+                <label>Mirakl Invitation</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

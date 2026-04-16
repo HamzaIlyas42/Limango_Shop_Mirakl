@@ -1,0 +1,22 @@
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 4,
+  "trailingComma": "es5",
+  "printWidth": 120,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "plugins": ["prettier-plugin-apex"],
+  "overrides": [
+    {
+      "files": ["*.cls", "*.trigger"],
+      "options": {
+        "parser": "apex",
+        "printWidth": 120,
+        "tabWidth": 4,
+        "apexInsertFinalNewline": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>of_which_SPA__c</fullName>
+    <description>Field required for AdSales so that they can enter how much of the budget from the contract was spent on SPA.</description>
+    <label>of which SPA</label>
+    <precision>5</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Currency</type>
+</CustomField>

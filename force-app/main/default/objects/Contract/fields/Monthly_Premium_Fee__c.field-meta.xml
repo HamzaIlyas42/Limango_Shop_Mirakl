@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Monthly_Premium_Fee__c</fullName>
+    <label>Monthly Premium Fee</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>no premium support</fullName>
+                <default>true</default>
+                <label>no premium support</label>
+            </value>
+            <value>
+                <fullName>59,00 €</fullName>
+                <default>false</default>
+                <label>59,00 €</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TechContact3__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Additional contact person for technical issues</description>
+    <inlineHelpText>Additional contact person for technical issues</inlineHelpText>
+    <label>Tech contact 3</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>Contact.AccountId</field>
+            <operation>equals</operation>
+            <valueField>$Source.Id</valueField>
+        </filterItems>
+        <isOptional>true</isOptional>
+    </lookupFilter>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>Accounts (Tech contact 3)</relationshipLabel>
+    <relationshipName>AccountsTechContact3</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Lookup</type>
+</CustomField>

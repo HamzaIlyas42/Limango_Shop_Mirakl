@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InvoiceConfigurationLanguage__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    OR(
+        ISPICKVAL(Address__CountryCode__s, &quot;DE&quot;),  /* Germany */
+        ISPICKVAL(Address__CountryCode__s, &quot;AT&quot;),  /* Austria */
+        ISPICKVAL(Address__CountryCode__s, &quot;CH&quot;)   /* Switzerland */
+    ),
+    &quot;german&quot;,
+    &quot;english&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Invoice Configuration Language</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

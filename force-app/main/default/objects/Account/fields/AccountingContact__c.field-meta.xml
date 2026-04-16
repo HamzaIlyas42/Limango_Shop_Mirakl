@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AccountingContact__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Contact for accounting and invoices on the part of partners</description>
+    <inlineHelpText>Contact for accounting and invoices on the part of partners</inlineHelpText>
+    <label>Accounting contact - invoice mails</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>Contact.AccountId</field>
+            <operation>equals</operation>
+            <valueField>$Source.ParentId</valueField>
+        </filterItems>
+        <isOptional>true</isOptional>
+    </lookupFilter>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>Accounts (Accounting contact - invoice mails)</relationshipLabel>
+    <relationshipName>AccountsAccountingContact</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Lookup</type>
+</CustomField>

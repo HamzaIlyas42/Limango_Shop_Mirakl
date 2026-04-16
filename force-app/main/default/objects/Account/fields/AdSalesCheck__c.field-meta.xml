@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdSalesCheck__c</fullName>
+    <defaultValue>false</defaultValue>
+    <inlineHelpText>Retail: Is the partner interested in AdSales?</inlineHelpText>
+    <label>AdSales Check</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

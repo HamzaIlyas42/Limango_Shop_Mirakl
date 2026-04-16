@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ActivatedStatusFieldsRequired</fullName>
+    <active>true</active>
+    <description>Activating the Contract only if required MC Fields filled in.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Status, &quot;activated&quot;),
+    ISPICKVAL(Backend__c, &quot;Merchant Center&quot;),
+    OR(
+        ISBLANK(BankAccountHolder__c),
+        ISBLANK(BankInstitution__c),
+        ISBLANK(BIC__c),
+        ISBLANK(IBAN__c),
+        ISBLANK(Commission__c),
+        ISPICKVAL(ConnectionType__c, &quot;&quot;)
+    )
+)</errorConditionFormula>
+    <errorMessage>For the status &apos;activated&apos;, all Merchant Centre mandatory fields must be completed.</errorMessage>
+</ValidationRule>

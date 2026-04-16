@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DeliveryPickup__c</fullName>
+    <label>Delivery / Pickup</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PickUpFromSupplier</fullName>
+                <default>false</default>
+                <label>Pick-Up from Supplier</label>
+            </value>
+            <value>
+                <fullName>DeliveryToGoleniow</fullName>
+                <default>false</default>
+                <label>Delivery to Goleniow</label>
+            </value>
+            <value>
+                <fullName>DeliveryToBerlin</fullName>
+                <default>false</default>
+                <label>Delivery to Berlin</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

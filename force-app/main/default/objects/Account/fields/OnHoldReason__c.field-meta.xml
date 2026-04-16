@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OnHoldReason__c</fullName>
+    <label>On Hold Reason</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>WarehouseRelocation</fullName>
+                <default>false</default>
+                <label>Warehouse Relocation</label>
+            </value>
+            <value>
+                <fullName>TechnicalChanges</fullName>
+                <default>false</default>
+                <label>Technical Changes</label>
+            </value>
+            <value>
+                <fullName>InterfaceTermination</fullName>
+                <default>false</default>
+                <label>Interface Termination</label>
+            </value>
+            <value>
+                <fullName>TerminationByPartnerHighReturnRate</fullName>
+                <default>false</default>
+                <label>Termination by Partner – High Return Rate</label>
+            </value>
+            <value>
+                <fullName>TerminationByLimangoHighReturnRate</fullName>
+                <default>false</default>
+                <label>Termination by Limango – High Return Rate</label>
+            </value>
+            <value>
+                <fullName>HighNoShips</fullName>
+                <default>false</default>
+                <label>High No-Ships</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

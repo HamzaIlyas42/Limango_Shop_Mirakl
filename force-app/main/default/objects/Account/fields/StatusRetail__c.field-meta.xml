@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StatusRetail__c</fullName>
+    <label>Status Retail</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>InProgress</fullName>
+                <default>true</default>
+                <label>In Progress</label>
+            </value>
+            <value>
+                <fullName>InactiveOpportunity</fullName>
+                <default>false</default>
+                <label>Inactive Opportunity</label>
+            </value>
+            <value>
+                <fullName>ActiveOpportunity</fullName>
+                <default>false</default>
+                <label>Active Opportunity</label>
+            </value>
+            <value>
+                <fullName>Signed</fullName>
+                <default>false</default>
+                <label>Signed</label>
+            </value>
+            <value>
+                <fullName>Live</fullName>
+                <default>false</default>
+                <label>Live</label>
+            </value>
+            <value>
+                <fullName>OnHold</fullName>
+                <default>false</default>
+                <label>On Hold</label>
+            </value>
+            <value>
+                <fullName>Terminated</fullName>
+                <default>false</default>
+                <label>Terminated</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

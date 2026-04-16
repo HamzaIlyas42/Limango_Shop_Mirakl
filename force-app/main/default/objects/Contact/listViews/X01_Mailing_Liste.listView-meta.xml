@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>X01_Mailing_Liste</fullName>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>CONTACT.EMAIL</columns>
+    <columns>Account.Status__c</columns>
+    <columns>Account.Priority_Category__c</columns>
+    <columns>Account.Category__c</columns>
+    <columns>Account.SalesManager__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Account.Status__c</field>
+        <operation>equals</operation>
+        <value>InProgress,InactiveOpportunity</value>
+    </filters>
+    <filters>
+        <field>BusinessUnit__c</field>
+        <operation>equals</operation>
+        <value>Marketplace,MarketplaceAdSales,MarketplaceRetail,All</value>
+    </filters>
+    <filters>
+        <field>Account.InactiveOpportunityReasons__c</field>
+        <operation>notEqual</operation>
+        <value>Insolvency,NoEuWarehouse,Not a Fit (Limango)</value>
+    </filters>
+    <label>Christmas Mailing</label>
+    <sharedTo>
+        <group>Sales</group>
+    </sharedTo>
+</ListView>

@@ -1,0 +1,110 @@
+# LIM_Account_MiraklCheckChanges
+
+**Type:** AutoLaunchedFlow | **Status:** Active | **API Version:** 64.0 | **Object/Trigger:** — / —
+
+---
+
+## Summary
+
+The flow "LIM_Account_MiraklCheckChanges" is a AutoLaunchedFlow flow (status Active). It does not use a record-triggered start element in metadata, or runs as screen/autolaunched/scheduled per its configuration. The automation includes 2 decision element(s) that branch execution based on configured conditions.
+
+---
+
+## Flow / Component Diagram
+
+```mermaid
+graph TD
+  E_Start["Start"]
+  E_ifChanged["ifChanged"]
+  E_ifRelevant["ifRelevant"]
+  E_setError["setError"]
+  E_Start -->|"start"| E_ifRelevant
+  E_ifChanged -->|"isChanged"| E_setError
+  E_ifRelevant -->|"isRelevant"| E_ifChanged
+```
+
+---
+
+## Technical Details
+
+### Variables
+
+| Name            | Type    | Input | Output | Default |
+| --------------- | ------- | ----- | ------ | ------- |
+| recAccount      | SObject | True  | True   |         |
+| recAccountPrior | SObject | True  | False  |         |
+| varErrorMessage | String  | True  | True   |         |
+
+### Decision Elements
+
+#### ifChanged
+
+- **Default:** → `—` (isNorChanged)
+- **Rule:** isChanged → `setError`
+    - Condition logic: `or`
+    - `recAccount.Shopname__c` NotEqualTo `elementReference:recAccountPrior.Shopname__c`
+    - `recAccount.CommercialRegisterNumber__c` NotEqualTo `elementReference:recAccountPrior.CommercialRegisterNumber__c`
+
+#### ifRelevant
+
+- **Default:** → `—` (isNotRelevant)
+- **Rule:** isRelevant → `ifChanged`
+    - Condition logic: `and`
+    - `recAccount.Backend__c` EqualTo `stringValue:Mirakl`
+    - `$Permission.MiraklIntegration` EqualTo `booleanValue:false`
+
+### Record Operations
+
+#### Lookups
+
+| Name | Object | Fault path | Filter logic |
+| ---- | ------ | ---------- | ------------ |
+| —    | —      | —          | —            |
+
+#### Creates
+
+| Name | Object | Fault path | Filter logic |
+| ---- | ------ | ---------- | ------------ |
+| —    | —      | —          | —            |
+
+#### Updates
+
+| Name | Object | Fault path | Filter logic |
+| ---- | ------ | ---------- | ------------ |
+| —    | —      | —          | —            |
+
+#### Deletes
+
+| Name | Object | Fault path | Filter logic |
+| ---- | ------ | ---------- | ------------ |
+| —    | —      | —          | —            |
+
+### Record field assignments (creates and updates)
+
+—
+
+### Actions
+
+| Name | Action | Type | Fault |
+| ---- | ------ | ---- | ----- |
+| —    | —      | —    | —     |
+
+### Subflows
+
+| Name | Called flow | Fault |
+| ---- | ----------- | ----- |
+| —    | —           | —     |
+
+### Fault paths
+
+Elements referencing a fault connector are listed in the Record Operations and Actions tables above.
+
+---
+
+## Dependencies
+
+- **Objects:** —
+- **Subflows:** —
+- **Apex / invocable actions:** —
+
+---

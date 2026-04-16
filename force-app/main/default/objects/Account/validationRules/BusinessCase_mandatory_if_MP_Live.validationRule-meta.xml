@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BusinessCase_mandatory_if_MP_Live</fullName>
+    <active>true</active>
+    <description>Stellt sicher, dass das Feld BusinessCase__c ausgefüllt ist, wenn der Account-Status &apos;Signed&apos;, &apos;Live&apos;, &apos;OnHold&apos; oder &apos;Terminated&apos; ist (bei MP Partnern)</description>
+    <errorConditionFormula>AND(
+    OR(
+        ISPICKVAL( BusinessUnit__c , &quot;All&quot;),
+        ISPICKVAL( BusinessUnit__c , &quot;Marketplace&quot;),
+        ISPICKVAL( BusinessUnit__c , &quot;MarketplaceRetail&quot;),
+        ISPICKVAL( BusinessUnit__c , &quot;MarketplaceAdSales&quot;)
+    ),
+    OR(
+        ISPICKVAL( Status__c , &quot;Signed&quot;),
+        ISPICKVAL( Status__c , &quot;Live&quot;),
+        ISPICKVAL( Status__c , &quot;OnHold&quot;),
+        ISPICKVAL( Status__c , &quot;Terminated&quot;)
+    ),
+    ISBLANK( BusinessCase__c )
+)</errorConditionFormula>
+    <errorMessage>Please fill Business Case Field</errorMessage>
+</ValidationRule>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AddressCompanyName__c</fullName>
+    <externalId>false</externalId>
+    <inlineHelpText>If the name on the invoice is different from the company name, please enter it here. If it is the same, leave this field blank.</inlineHelpText>
+    <label>Address Company Name</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

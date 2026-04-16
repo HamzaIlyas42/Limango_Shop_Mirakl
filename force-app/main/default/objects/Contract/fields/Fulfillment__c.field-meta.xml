@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fulfillment__c</fullName>
+    <description>Service provider who carries out the shipping process for the partner</description>
+    <inlineHelpText>Service provider who carries out the shipping process for the partner</inlineHelpText>
+    <label>Fulfillment</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Zeos</fullName>
+                <default>false</default>
+                <label>ZEOS</label>
+            </value>
+            <value>
+                <fullName>Ayf</fullName>
+                <default>false</default>
+                <label>AYF</label>
+            </value>
+            <value>
+                <fullName>GuteMarken</fullName>
+                <default>false</default>
+                <label>Gute Marken</label>
+            </value>
+            <value>
+                <fullName>Gojungo</fullName>
+                <default>false</default>
+                <label>gojungo</label>
+            </value>
+            <value>
+                <fullName>Heyconnect</fullName>
+                <default>false</default>
+                <label>heyconnect</label>
+            </value>
+            <value>
+                <fullName>Onquality</fullName>
+                <default>false</default>
+                <label>onquality</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

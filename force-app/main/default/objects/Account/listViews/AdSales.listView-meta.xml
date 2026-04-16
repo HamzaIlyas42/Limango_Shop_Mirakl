@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdSales</fullName>
+    <booleanFilter>1 AND 2 AND 3</booleanFilter>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>BusinessUnit__c</columns>
+    <columns>AdSalesCategory__c</columns>
+    <columns>AdSalesManager__c</columns>
+    <columns>AdSalesCampaignManager__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>BusinessUnit__c</field>
+        <operation>equals</operation>
+        <value>AdSales,MarketplaceAdSales,RetailAdSales</value>
+    </filters>
+    <filters>
+        <field>AdSalesStatus__c</field>
+        <operation>equals</operation>
+        <value>Active</value>
+    </filters>
+    <filters>
+        <field>AdSalesCategory__c</field>
+        <operation>notContain</operation>
+        <value>Extern direkt</value>
+    </filters>
+    <label>AdSales</label>
+    <sharedTo>
+        <group>AdSales</group>
+    </sharedTo>
+</ListView>

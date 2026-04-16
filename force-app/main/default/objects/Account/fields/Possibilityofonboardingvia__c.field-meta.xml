@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Possibilityofonboardingvia__c</fullName>
+    <label>Possibility of Onboarding via</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Agency</fullName>
+                <default>false</default>
+                <label>Agency</label>
+            </value>
+            <value>
+                <fullName>Brand</fullName>
+                <default>false</default>
+                <label>Brand</label>
+            </value>
+            <value>
+                <fullName>Fulfillment</fullName>
+                <default>false</default>
+                <label>Fulfillment</label>
+            </value>
+            <value>
+                <fullName>Trader</fullName>
+                <default>false</default>
+                <label>Trader</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

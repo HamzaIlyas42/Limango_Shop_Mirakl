@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PM_My_Accounts</fullName>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>CORE.USERS.ALIAS</columns>
+    <columns>AccountManager__c</columns>
+    <columns>Status__c</columns>
+    <columns>ACCOUNT.TYPE</columns>
+    <columns>Commission__c</columns>
+    <columns>FreeShippingAT__c</columns>
+    <columns>FreeShippingDE__c</columns>
+    <columns>ShippingCostAt__c</columns>
+    <columns>ShippingCostDe__c</columns>
+    <columns>ACCOUNT.RATING</columns>
+    <columns>PartnerStatus__c</columns>
+    <columns>BusinessUnit__c</columns>
+    <columns>TechSupportManager__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Live</value>
+    </filters>
+    <filters>
+        <field>AccountManager__c</field>
+        <operation>equals</operation>
+        <value>Nesrin Esen</value>
+    </filters>
+    <label>02_PM My Live Accounts</label>
+    <sharedTo>
+        <group>Marketplace</group>
+    </sharedTo>
+</ListView>

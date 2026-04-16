@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All_x_Channelengine_Live_Accounts</fullName>
+    <columns>AccountManager__c</columns>
+    <columns>ACCOUNT.RATING</columns>
+    <columns>MerchantId__c</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>Commission__c</columns>
+    <columns>PartnerStatus__c</columns>
+    <columns>ConnectionType__c</columns>
+    <columns>DemandTargetFy__c</columns>
+    <columns>limango_Assortment__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Live</value>
+    </filters>
+    <filters>
+        <field>ConnectionType__c</field>
+        <operation>equals</operation>
+        <value>channelengine</value>
+    </filters>
+    <label>All x Channelengine Live Accounts</label>
+    <sharedTo>
+        <group>Account</group>
+    </sharedTo>
+</ListView>

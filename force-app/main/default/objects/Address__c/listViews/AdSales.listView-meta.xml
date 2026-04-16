@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdSales</fullName>
+    <columns>ContactPerson__c</columns>
+    <columns>Account__c</columns>
+    <columns>BusinessUnitAdSalesAddress__c</columns>
+    <columns>AddressType__c</columns>
+    <columns>NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>BusinessUnit__c</field>
+        <operation>equals</operation>
+        <value>AdSales</value>
+    </filters>
+    <label>AdSales</label>
+    <sharedTo>
+        <group>AdSales</group>
+    </sharedTo>
+</ListView>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PartnerStrategy__c</fullName>
+    <label>Partner Strategy</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ClearanceOfOldStock</fullName>
+                <default>false</default>
+                <label>Clearance of old stock</label>
+            </value>
+            <value>
+                <fullName>FullPriceAssortment</fullName>
+                <default>false</default>
+                <label>Full-price assortment</label>
+            </value>
+            <value>
+                <fullName>BrandAwarenessBuilding</fullName>
+                <default>false</default>
+                <label>Brand awareness/building</label>
+            </value>
+            <value>
+                <fullName>OverstockClearance</fullName>
+                <default>false</default>
+                <label>Overstock clearance</label>
+            </value>
+            <value>
+                <fullName>SeasonalAssortment</fullName>
+                <default>false</default>
+                <label>Seasonal assortment</label>
+            </value>
+            <value>
+                <fullName>ExpansionOfOtherMarketplaces</fullName>
+                <default>false</default>
+                <label>Expansion of other marketplaces</label>
+            </value>
+            <value>
+                <fullName>Internationalization</fullName>
+                <default>false</default>
+                <label>Internationalization</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>7</visibleLines>
+</CustomField>

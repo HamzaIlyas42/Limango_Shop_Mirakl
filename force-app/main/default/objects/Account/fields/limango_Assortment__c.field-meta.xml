@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>limango_Assortment__c</fullName>
+    <externalId>false</externalId>
+    <formula>CASE(
+Backend__c,
+&quot;Merchant Center&quot;,
+&quot;https://www.limango.de/shop/products?merchantId=&quot; &amp; MerchantId__c,
+&quot;Mirakl&quot;,
+&quot;https://www.limango.de/shop/products?merchantId=100&quot; &amp; MerchantId__c,
+NULL
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>limango Assortment</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Copy_of_02_PM_My_Live_Accounts</fullName>
+    <columns>ACCOUNT.RATING</columns>
+    <columns>MerchantId__c</columns>
+    <columns>Sustainability__c</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>Commission__c</columns>
+    <columns>Shipping_to_Poland__c</columns>
+    <columns>FreeShippingDE__c</columns>
+    <columns>PartnerStatus__c</columns>
+    <columns>ConnectionType__c</columns>
+    <columns>DemandTargetFy__c</columns>
+    <columns>Brands__c</columns>
+    <columns>limango_Assortment__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Live</value>
+    </filters>
+    <filters>
+        <field>AccountManager__c</field>
+        <operation>equals</operation>
+        <value>Manuela Frenzer</value>
+    </filters>
+    <label>Manu&apos;s Accounts x 02_PM My Live Accounts</label>
+    <sharedTo>
+        <group>Account</group>
+    </sharedTo>
+</ListView>

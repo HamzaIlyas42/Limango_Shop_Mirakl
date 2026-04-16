@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RoleFunction__c</fullName>
+    <label>Role / Function</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>true</sorted>
+            <value>
+                <fullName>AccountingFinance</fullName>
+                <default>false</default>
+                <label>Accounting/ Finance</label>
+            </value>
+            <value>
+                <fullName>AccountingContactInvoiceMails</fullName>
+                <default>false</default>
+                <label>Accounting contact - invoice mails</label>
+            </value>
+            <value>
+                <fullName>AdSalesAccounting</fullName>
+                <default>false</default>
+                <label>AdSales Accounting</label>
+            </value>
+            <value>
+                <fullName>AdSalesManager</fullName>
+                <default>false</default>
+                <label>Ad-Sales Manager</label>
+            </value>
+            <value>
+                <fullName>CompanyManagement</fullName>
+                <default>false</default>
+                <label>Company Management</label>
+            </value>
+            <value>
+                <fullName>CustomerService</fullName>
+                <default>false</default>
+                <label>Customer Service</label>
+            </value>
+            <value>
+                <fullName>Distribution</fullName>
+                <default>false</default>
+                <label>Distribution</label>
+            </value>
+            <value>
+                <fullName>Edi</fullName>
+                <default>false</default>
+                <label>EDI</label>
+            </value>
+            <value>
+                <fullName>Integration</fullName>
+                <default>false</default>
+                <label>Integration</label>
+            </value>
+            <value>
+                <fullName>IntegrationAgency</fullName>
+                <default>false</default>
+                <label>Integration Agency</label>
+            </value>
+            <value>
+                <fullName>KeyAccountManager</fullName>
+                <default>false</default>
+                <label>Key Account Manager</label>
+            </value>
+            <value>
+                <fullName>Logistic</fullName>
+                <default>false</default>
+                <label>Logistic</label>
+            </value>
+            <value>
+                <fullName>Marketing Director</fullName>
+                <default>false</default>
+                <label>Marketing Director</label>
+            </value>
+            <value>
+                <fullName>MarketingManager</fullName>
+                <default>false</default>
+                <label>Marketing Manager</label>
+            </value>
+            <value>
+                <fullName>ProductActivation</fullName>
+                <default>false</default>
+                <label>Product Activation</label>
+            </value>
+            <value>
+                <fullName>ProjectLead</fullName>
+                <default>false</default>
+                <label>Project Lead</label>
+            </value>
+            <value>
+                <fullName>Replenishment</fullName>
+                <default>false</default>
+                <label>Replenishment</label>
+            </value>
+            <value>
+                <fullName>Retail</fullName>
+                <default>false</default>
+                <label>Retail</label>
+            </value>
+            <value>
+                <fullName>Sales contact</fullName>
+                <default>false</default>
+                <label>Sales contact</label>
+            </value>
+            <value>
+                <fullName>SalesManager</fullName>
+                <default>false</default>
+                <label>Sales Manager</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

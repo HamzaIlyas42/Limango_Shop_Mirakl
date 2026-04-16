@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TerminationReason__c</fullName>
+    <label>Termination Reason</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Insolvency</fullName>
+                <default>false</default>
+                <label>Insolvency</label>
+            </value>
+            <value>
+                <fullName>TerminationByPartnerStrategicReasons</fullName>
+                <default>false</default>
+                <label>Termination by Partner – Strategic Reasons</label>
+            </value>
+            <value>
+                <fullName>TerminationByPartnerCapacityIssues</fullName>
+                <default>false</default>
+                <label>Termination by Partner – Capacity Issues</label>
+            </value>
+            <value>
+                <fullName>TerminationByPartnerLowSales</fullName>
+                <default>false</default>
+                <label>Termination by Partner – Low Sales</label>
+            </value>
+            <value>
+                <fullName>TerminationByLimangoLowSales</fullName>
+                <default>false</default>
+                <label>Termination by Limango – Low Sales</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

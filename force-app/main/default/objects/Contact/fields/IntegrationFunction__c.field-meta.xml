@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IntegrationFunction__c</fullName>
+    <label>Integration Function</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <controllingField>RoleFunction__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ProductActivationContact</fullName>
+                <default>false</default>
+                <label>Product Activation contact</label>
+            </value>
+            <value>
+                <fullName>AdminContact</fullName>
+                <default>false</default>
+                <label>Admin contact</label>
+            </value>
+            <value>
+                <fullName>TechContact</fullName>
+                <default>false</default>
+                <label>Tech contact</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Integration</controllingFieldValue>
+            <valueName>ProductActivationContact</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Integration</controllingFieldValue>
+            <valueName>AdminContact</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Integration</controllingFieldValue>
+            <valueName>TechContact</valueName>
+        </valueSettings>
+    </valueSet>
+    <visibleLines>3</visibleLines>
+</CustomField>

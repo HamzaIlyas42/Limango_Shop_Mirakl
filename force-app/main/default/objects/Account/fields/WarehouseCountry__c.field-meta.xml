@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>WarehouseCountry__c</fullName>
+    <description>Country where the company warehouse is located, corresponding to the warehouse VAT ID.</description>
+    <inlineHelpText>Country where the company warehouse is located, corresponding to the warehouse VAT ID.</inlineHelpText>
+    <label>Warehouse Country</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetName>MerchantCenterCountry</valueSetName>
+    </valueSet>
+</CustomField>

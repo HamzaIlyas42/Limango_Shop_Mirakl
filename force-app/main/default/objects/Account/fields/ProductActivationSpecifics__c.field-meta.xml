@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ProductActivationSpecifics__c</fullName>
+    <description>Special exceptions and requirements for product activation.</description>
+    <inlineHelpText>Special exceptions and requirements for product activation.</inlineHelpText>
+    <label>Product Activation Specifics</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>SpecificCategoryMapping</fullName>
+                <default>false</default>
+                <label>Specific category mapping</label>
+            </value>
+            <value>
+                <fullName>SpecificSizeMapping</fullName>
+                <default>false</default>
+                <label>Specific size mapping</label>
+            </value>
+            <value>
+                <fullName>SpecificColorMapping</fullName>
+                <default>false</default>
+                <label>Specific color mapping</label>
+            </value>
+            <value>
+                <fullName>SpecificPricing</fullName>
+                <default>false</default>
+                <label>Specific pricing</label>
+            </value>
+            <value>
+                <fullName>SpecificBadWords</fullName>
+                <default>false</default>
+                <label>Specific bad words</label>
+            </value>
+            <value>
+                <fullName>SpecificProductDataStructure</fullName>
+                <default>false</default>
+                <label>Specific product data structure</label>
+            </value>
+            <value>
+                <fullName>SpecificDescriptionText</fullName>
+                <default>false</default>
+                <label>Specific description text</label>
+            </value>
+            <value>
+                <fullName>SpecificLicensesTrademarkLaw</fullName>
+                <default>false</default>
+                <label>Specific licenses / trademark law</label>
+            </value>
+            <value>
+                <fullName>SpecificImageSequence</fullName>
+                <default>false</default>
+                <label>Specific image sequence</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdminContact2__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Additional contact the technical contact person</description>
+    <inlineHelpText>Additional contact the technical contact person</inlineHelpText>
+    <label>Admin contact 2</label>
+    <lookupFilter>
+        <active>true</active>
+        <errorMessage>The contact does not belong to the associated company for this partner integration.</errorMessage>
+        <filterItems>
+            <field>Contact.AccountId</field>
+            <operation>equals</operation>
+            <valueField>$Source.Id</valueField>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>Accounts (Admin contact 2)</relationshipLabel>
+    <relationshipName>AccountAdminContact2</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Lookup</type>
+</CustomField>

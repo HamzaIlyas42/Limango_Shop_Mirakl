@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ProductActivationNote__c</fullName>
+    <description>Detailed Information about exception for product activation.</description>
+    <inlineHelpText>Detailed Information about exception for product activation.</inlineHelpText>
+    <label>Product Activation Note</label>
+    <length>32768</length>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
+</CustomField>

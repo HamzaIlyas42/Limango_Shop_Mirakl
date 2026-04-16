@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AdressCompactLayout</fullName>
+    <fields>Name</fields>
+    <fields>Account__c</fields>
+    <fields>ContactPerson__c</fields>
+    <fields>Address__c</fields>
+    <fields>AddressStatus__c</fields>
+    <fields>AddressType__c</fields>
+    <label>Adress Compact Layout</label>
+</CompactLayout>

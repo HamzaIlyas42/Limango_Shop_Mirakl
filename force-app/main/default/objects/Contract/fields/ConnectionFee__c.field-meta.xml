@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ConnectionFee__c</fullName>
+    <label>Connection Fee</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>499Euro</fullName>
+                <default>false</default>
+                <label>499 Euro</label>
+            </value>
+            <value>
+                <fullName>799Euro</fullName>
+                <default>false</default>
+                <label>799 Euro</label>
+            </value>
+            <value>
+                <fullName>no connection fee</fullName>
+                <default>false</default>
+                <label>no connection fee</label>
+            </value>
+            <value>
+                <fullName>249,50Euro</fullName>
+                <default>false</default>
+                <label>249,50 Euro</label>
+            </value>
+            <value>
+                <fullName>399Euro</fullName>
+                <default>false</default>
+                <label>399 Euro</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
