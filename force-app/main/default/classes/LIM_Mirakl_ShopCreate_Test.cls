@@ -520,4 +520,110 @@ private class LIM_Mirakl_ShopCreate_Test {
             'Error message should mention Shopname__c'
         );
     }
+
+    @isTest
+    static void createShop_existingUser_sendsExistingUserPayload() {
+        Account acc = new Account(Name = 'Existing User Account', Shopname__c = 'Existing User Shop', CommercialRegisterNumber__c = 'CR_EU');
+        insert acc;
+        Contact con = new Contact(
+            AccountId = acc.Id,
+            FirstName = 'Ex',
+            LastName = 'User',
+            Email = 'existing@mirakl.com',
+            RoleMarketplace__c = 'Mirakl Invitation',
+            ExistingMiraklUser__c = 'Yes'
+        );
+        insert con;
+        Address__c addr = new Address__c(Account__c = acc.Id, AddressType__c = 'Headquarter');
+        addr.put('Address__Street__s', 'Existing St');
+        addr.put('Address__PostalCode__s', '99999');
+        addr.put('Address__City__s', 'Munich');
+        addr.put('Address__CountryCode__s', 'DE');
+        insert addr;
+        Contract ctr = new Contract(
+            AccountId = acc.Id,
+            StartDate = Date.today().addMonths(-1),
+            ContractTerm = 12,
+            ContractVisiblityCriteria__c = 'Marketplace',
+            Status = 'Draft'
+        );
+        insert ctr;
+        ctr.Status = 'Activated';
+        ctr.ActivatedDate = Date.today();
+        update ctr;
+        PartnerIntegration__c pi = new PartnerIntegration__c(CompanyName__c = acc.Id);
+        insert pi;
+
+        Test.setMock(HttpCalloutMock.class, new MockShopCreated());
+        LIM_Mirakl_ShopCreate.Input input = new LIM_Mirakl_ShopCreate.Input();
+        input.partnerIntegrationId = pi.Id;
+
+        Test.startTest();
+        List<LIM_Mirakl_ShopCreate.Output> results = LIM_Mirakl_ShopCreate.createShop(
+            new List<LIM_Mirakl_ShopCreate.Input>{ input }
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, results.size(), 'Should return one result');
+        System.assertEquals(true, results[0].success, 'Should succeed with existing_user');
+        System.assert(
+            results[0].requestJson != null && results[0].requestJson.contains('"existing_user"'),
+            'Request JSON should contain existing_user'
+        );
+        System.assert(
+            !results[0].requestJson.contains('"new_user"'),
+            'Request JSON must NOT contain new_user when existing user flag is Yes'
+        );
+    }
+
+    @isTest
+    static void createShop_combinedRoleIncludesMiraklInvitation_succeeds() {
+        Account acc = new Account(Name = 'Multi Role Account', Shopname__c = 'Multi Role Shop', CommercialRegisterNumber__c = 'CR_MR');
+        insert acc;
+        Contact con = new Contact(
+            AccountId = acc.Id,
+            FirstName = 'Multi',
+            LastName = 'Role',
+            Email = 'multirole@example.com',
+            RoleMarketplace__c = 'Sales Contact;Mirakl Invitation'
+        );
+        insert con;
+        Address__c addr = new Address__c(Account__c = acc.Id, AddressType__c = 'Headquarter');
+        addr.put('Address__Street__s', 'Multi St');
+        addr.put('Address__PostalCode__s', '11111');
+        addr.put('Address__City__s', 'Berlin');
+        addr.put('Address__CountryCode__s', 'DE');
+        insert addr;
+        Contract ctr = new Contract(
+            AccountId = acc.Id,
+            StartDate = Date.today().addMonths(-1),
+            ContractTerm = 12,
+            ContractVisiblityCriteria__c = 'Marketplace',
+            Status = 'Draft'
+        );
+        insert ctr;
+        ctr.Status = 'Activated';
+        ctr.ActivatedDate = Date.today();
+        update ctr;
+        PartnerIntegration__c pi = new PartnerIntegration__c(CompanyName__c = acc.Id);
+        insert pi;
+
+        Test.setMock(HttpCalloutMock.class, new MockShopCreated());
+        LIM_Mirakl_ShopCreate.Input input = new LIM_Mirakl_ShopCreate.Input();
+        input.partnerIntegrationId = pi.Id;
+
+        Test.startTest();
+        List<LIM_Mirakl_ShopCreate.Output> results = LIM_Mirakl_ShopCreate.createShop(
+            new List<LIM_Mirakl_ShopCreate.Input>{ input }
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, results.size(), 'Should return one result');
+        System.assertEquals(true, results[0].success, 'Contact with combined roles should be found via INCLUDES');
+        System.assertEquals('MIRAKL_123', results[0].merchantId, 'MerchantId should be set');
+        System.assert(
+            results[0].requestJson != null && results[0].requestJson.contains('"new_user"'),
+            'Request JSON should contain new_user (ExistingMiraklUser__c defaults to No)'
+        );
+    }
 }

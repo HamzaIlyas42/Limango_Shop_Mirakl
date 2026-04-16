@@ -88,7 +88,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         Contact c = [
             SELECT Id, FirstName, LastName, Email, RoleMarketplace__c
             FROM Contact
-            WHERE AccountId = :a.Id AND RoleMarketplace__c = 'Mirakl Invitation'
+            WHERE AccountId = :a.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
             LIMIT 1
         ];
         System.assertEquals('John', c.FirstName);
@@ -341,7 +341,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         Contact c = [
             SELECT Salutation, Title
             FROM Contact
-            WHERE AccountId = :a.Id AND RoleMarketplace__c = 'Mirakl Invitation'
+            WHERE AccountId = :a.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
             LIMIT 1
         ];
         System.assertEquals('Ms.', c.Salutation, 'Civility Miss should map to Salutation Ms.');
@@ -398,5 +398,71 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
         PartnerIntegration__c updated = [SELECT OwnerId FROM PartnerIntegration__c WHERE Id = :pi.Id];
         System.assertEquals(omUser.Id, updated.OwnerId, 'PI OwnerId should be set from ONBOARDING_MANAGER assignee');
+    }
+
+    @IsTest
+    static void testSyncShopsFromJson_combinedRoleContact_isFound() {
+        Account acc = insertStubAccount('999041');
+        Contact pre = new Contact(
+            AccountId = acc.Id,
+            FirstName = 'Pre',
+            LastName = 'Existing',
+            Email = 'pre@example.com',
+            RoleMarketplace__c = 'Sales Contact;Mirakl Invitation'
+        );
+        insert pre;
+
+        String json = buildSampleJson(999041);
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        List<Contact> contacts = [
+            SELECT Id, RoleMarketplace__c
+            FROM Contact
+            WHERE AccountId = :acc.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
+        ];
+        System.assertEquals(1, contacts.size(), 'Exactly one contact with Mirakl Invitation role should exist after sync');
+        System.assert(
+            contacts[0].RoleMarketplace__c.contains('Mirakl Invitation'),
+            'Mirakl Invitation role must be preserved after sync upsert'
+        );
+    }
+
+    @IsTest
+    static void testSyncShopsFromJson_rolesMergedOnUpdate() {
+        Account acc = insertStubAccount('999042');
+        Contact pre = new Contact(
+            AccountId = acc.Id,
+            FirstName = 'Merge',
+            LastName = 'Test',
+            Email = 'merge@example.com',
+            RoleMarketplace__c = 'Key Account Contact;Mirakl Invitation'
+        );
+        insert pre;
+
+        String json = buildSampleJson(999042);
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        Contact updated = [
+            SELECT RoleMarketplace__c
+            FROM Contact
+            WHERE AccountId = :acc.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
+            LIMIT 1
+        ];
+        System.assert(
+            updated.RoleMarketplace__c.contains('Key Account Contact'),
+            'Pre-existing roles other than Mirakl Invitation should be preserved after sync'
+        );
+        System.assert(
+            updated.RoleMarketplace__c.contains('Mirakl Invitation'),
+            'Mirakl Invitation role should still be present after sync'
+        );
     }
 }

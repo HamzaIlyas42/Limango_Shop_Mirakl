@@ -492,13 +492,13 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 hqAddressByAccount.put(addr.Account__c, addr.Id);
             }
 
-            Map<Id, Id> miraklContactByAccount = new Map<Id, Id>();
+            Map<Id, Contact> miraklContactByAccount = new Map<Id, Contact>();
             for (Contact c : [
-                SELECT Id, AccountId
+                SELECT Id, AccountId, RoleMarketplace__c
                 FROM Contact
-                WHERE AccountId IN :accountIds AND RoleMarketplace__c = :ROLE_MIRAKL_INVITATION
+                WHERE AccountId IN :accountIds AND RoleMarketplace__c INCLUDES (:ROLE_MIRAKL_INVITATION)
             ]) {
-                miraklContactByAccount.put(c.AccountId, c.Id);
+                miraklContactByAccount.put(c.AccountId, c);
             }
 
             List<Address__c> addressUpsert = new List<Address__c>();
@@ -519,9 +519,10 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                     addressUpsert.add(addr);
                 }
 
-                Contact ct = buildContact(shop, accountId);
-                if (miraklContactByAccount.containsKey(accountId)) {
-                    ct.Id = miraklContactByAccount.get(accountId);
+                Contact existingContact = miraklContactByAccount.get(accountId);
+                Contact ct = buildContact(shop, accountId, existingContact);
+                if (existingContact != null) {
+                    ct.Id = existingContact.Id;
                 }
                 contactUpsert.add(ct);
             }
@@ -757,11 +758,14 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
             String.isNotBlank(stringVal(getFromMap(m, 'zip_code')));
     }
 
-    private static Contact buildContact(Map<String, Object> shop, Id accountId) {
+    private static Contact buildContact(Map<String, Object> shop, Id accountId, Contact existing) {
         Map<String, Object> contactInfo = childMap(shop, 'contact_informations');
         Contact c = new Contact();
         c.AccountId = accountId;
-        c.RoleMarketplace__c = ROLE_MIRAKL_INVITATION;
+        c.RoleMarketplace__c = mergeRoleMarketplace(
+            existing != null ? existing.RoleMarketplace__c : null,
+            ROLE_MIRAKL_INVITATION
+        );
 
         if (contactInfo != null) {
             c.FirstName = stringVal(contactInfo.get('firstname'));
@@ -777,6 +781,21 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         }
 
         return c;
+    }
+
+    /**
+     * Merges a required role value into an existing multiselect picklist string.
+     * Preserves other role tokens so upsert does not wipe combined roles.
+     */
+    private static String mergeRoleMarketplace(String existing, String requiredRole) {
+        if (String.isBlank(existing)) {
+            return requiredRole;
+        }
+        Set<String> roles = new Set<String>(existing.split(';'));
+        roles.add(requiredRole);
+        List<String> sorted = new List<String>(roles);
+        sorted.sort();
+        return String.join(sorted, ';');
     }
 
     private static Map<String, Object> childMap(Map<String, Object> parent, String key) {

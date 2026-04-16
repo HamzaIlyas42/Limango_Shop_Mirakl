@@ -186,9 +186,9 @@ public with sharing class LIM_Mirakl_ShopCreate {
                     AccountManager__r.Email,
                     TechSupportManager__r.Email,
                     (
-                        SELECT Id, Email, FirstName, LastName, Salutation
+                        SELECT Id, Email, FirstName, LastName, Salutation, ExistingMiraklUser__c
                         FROM Contacts
-                        WHERE RoleMarketplace__c = 'Mirakl Invitation'
+                        WHERE RoleMarketplace__c INCLUDES ('Mirakl Invitation')
                     ),
                     (
                         SELECT Id, Address__Street__s, Address__PostalCode__s, Address__City__s, Address__CountryCode__s
@@ -249,15 +249,21 @@ public with sharing class LIM_Mirakl_ShopCreate {
             Map<String, Object> proDetails = new Map<String, Object>{
                 'identification_number' => acct.CommercialRegisterNumber__c
             };
-            Map<String, Object> newUser = new Map<String, Object>{ 'email' => contactEmail };
+
+            Boolean useExistingUser =
+                primaryContact != null && primaryContact.ExistingMiraklUser__c == 'Yes';
 
             Map<String, Object> shop = new Map<String, Object>{
                 'address' => address,
-                'new_user' => newUser,
                 'pro_details' => proDetails,
                 'email' => contactEmail,
                 'shop_name' => shopNameForMirakl
             };
+            if (useExistingUser) {
+                shop.put('existing_user', new Map<String, Object>{ 'email' => contactEmail });
+            } else {
+                shop.put('new_user', new Map<String, Object>{ 'email' => contactEmail });
+            }
 
             String onboardingEmail = piList[0].Owner.Email;
             List<Object> assigneeList = new List<Object>();
