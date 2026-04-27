@@ -176,6 +176,14 @@ private class LIM_Mirakl_ShopCreate_Test {
             results[0].requestJson.contains('Contract SLA body text'),
             'Request should include shop_additional_fields from Contract Sla__c'
         );
+        System.assert(
+            results[0].requestJson.contains('"is_professional":true'),
+            'Request should mark shop as professional for Mirakl'
+        );
+        System.assert(
+            results[0].requestJson.contains('"corporate_name":"Shop Test Account"'),
+            'Request should include pro_details.corporate_name from Account Name'
+        );
     }
 
     @isTest
@@ -554,6 +562,44 @@ private class LIM_Mirakl_ShopCreate_Test {
         System.assert(
             results[0].errorMessage != null && results[0].errorMessage.contains('Shopname__c'),
             'Error message should mention Shopname__c'
+        );
+    }
+
+    @isTest
+    static void createShop_accountNameWhitespaceOnly_returnsError() {
+        Account acc = new Account(Name = '   ', Shopname__c = 'Whitespace Name Shop', CommercialRegisterNumber__c = 'CR');
+        insert acc;
+        Contact con = new Contact(
+            AccountId = acc.Id,
+            FirstName = 'F',
+            LastName = 'L',
+            Email = 'whitespacecorp@x.com',
+            RoleMarketplace__c = 'Mirakl Invitation'
+        );
+        insert con;
+        Address__c addr = new Address__c(Account__c = acc.Id, AddressType__c = 'Headquarter');
+        addr.put('Address__Street__s', 'St');
+        addr.put('Address__PostalCode__s', '1');
+        addr.put('Address__City__s', 'City');
+        addr.put('Address__CountryCode__s', 'DE');
+        insert addr;
+        PartnerIntegration__c pi = new PartnerIntegration__c(CompanyName__c = acc.Id);
+        insert pi;
+
+        LIM_Mirakl_ShopCreate.Input input = new LIM_Mirakl_ShopCreate.Input();
+        input.partnerIntegrationId = pi.Id;
+
+        Test.startTest();
+        List<LIM_Mirakl_ShopCreate.Output> results = LIM_Mirakl_ShopCreate.createShop(
+            new List<LIM_Mirakl_ShopCreate.Input>{ input }
+        );
+        Test.stopTest();
+
+        System.assertEquals(1, results.size(), 'Should return one result');
+        System.assertEquals(false, results[0].success, 'Should fail when Account Name trims to empty');
+        System.assert(
+            results[0].errorMessage != null && results[0].errorMessage.contains('corporate_name'),
+            'Error message should mention corporate_name requirement'
         );
     }
 

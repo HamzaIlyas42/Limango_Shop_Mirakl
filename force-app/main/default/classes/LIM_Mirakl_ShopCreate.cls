@@ -264,6 +264,13 @@ public with sharing class LIM_Mirakl_ShopCreate {
                 return result;
             }
 
+            String corporateNameForMirakl = String.isNotBlank(acct.Name) ? acct.Name.trim() : null;
+            if (String.isBlank(corporateNameForMirakl)) {
+                result.success = false;
+                result.errorMessage = 'Account Name is required for Mirakl pro_details.corporate_name.';
+                return result;
+            }
+
             String miraklChannelCode = null;
             if (String.isNotBlank(acct.SalesChannel__c)) {
                 miraklChannelCode = miraklChannelCodeForSalesChannel(acct.SalesChannel__c.trim());
@@ -288,14 +295,15 @@ public with sharing class LIM_Mirakl_ShopCreate {
             }
 
             Map<String, Object> proDetails = new Map<String, Object>{
+                'corporate_name' => corporateNameForMirakl,
                 'identification_number' => acct.CommercialRegisterNumber__c
             };
 
-            Boolean useExistingUser =
-                primaryContact != null && primaryContact.ExistingMiraklUser__c == 'Yes';
+            Boolean useExistingUser = primaryContact != null && primaryContact.ExistingMiraklUser__c == 'Yes';
 
             Map<String, Object> shop = new Map<String, Object>{
                 'address' => address,
+                'is_professional' => true,
                 'pro_details' => proDetails,
                 'email' => contactEmail,
                 'shop_name' => shopNameForMirakl
@@ -309,22 +317,20 @@ public with sharing class LIM_Mirakl_ShopCreate {
             String onboardingEmail = piList[0].Owner.Email;
             List<Object> assigneeList = new List<Object>();
             if (String.isNotBlank(acct.AccountManager__r?.Email)) {
-                assigneeList.add(new Map<String, Object>{
-                    'email' => acct.AccountManager__r.Email,
-                    'role' => 'ACCOUNT_MANAGER'
-                });
+                assigneeList.add(
+                    new Map<String, Object>{ 'email' => acct.AccountManager__r.Email, 'role' => 'ACCOUNT_MANAGER' }
+                );
             }
             if (String.isNotBlank(acct.TechSupportManager__r?.Email)) {
-                assigneeList.add(new Map<String, Object>{
-                    'email' => acct.TechSupportManager__r.Email,
-                    'role' => 'SUPPORT_SPECIALIST'
-                });
+                assigneeList.add(
+                    new Map<String, Object>{
+                        'email' => acct.TechSupportManager__r.Email,
+                        'role' => 'SUPPORT_SPECIALIST'
+                    }
+                );
             }
             if (String.isNotBlank(onboardingEmail)) {
-                assigneeList.add(new Map<String, Object>{
-                    'email' => onboardingEmail,
-                    'role' => 'ONBOARDING_MANAGER'
-                });
+                assigneeList.add(new Map<String, Object>{ 'email' => onboardingEmail, 'role' => 'ONBOARDING_MANAGER' });
             }
             if (!assigneeList.isEmpty()) {
                 shop.put('assignees', assigneeList);
