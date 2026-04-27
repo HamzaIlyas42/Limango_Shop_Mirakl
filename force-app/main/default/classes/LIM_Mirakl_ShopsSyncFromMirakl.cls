@@ -695,6 +695,10 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         Map<String, Object> proDetails = childMap(shop, 'pro_details');
         if (proDetails != null) {
             a.CommercialRegisterNumber__c = stringVal(proDetails.get('identification_number'));
+            String corporateName = stringVal(proDetails.get('corporate_name'));
+            if (String.isNotBlank(corporateName)) {
+                a.Name = corporateName;
+            }
         }
 
         List<Object> additionalFields = (List<Object>) shop.get('shop_additional_fields');
@@ -743,7 +747,10 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         return a;
     }
 
-    /** Headquarter row: only AddressCompanyName__c from pro_details.corporate_name. */
+    /**
+     * Headquarter row when Mirakl sends pro_details.corporate_name (used as gate only).
+     * Corporate legal name is mapped to Account.Name in buildAccountFromShop, not to AddressCompanyName__c.
+     */
     private static Address__c buildAddress(Map<String, Object> shop, Id accountId) {
         Map<String, Object> proDetailsAddr = childMap(shop, 'pro_details');
         if (proDetailsAddr == null) {
@@ -757,7 +764,6 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         Address__c addr = new Address__c();
         addr.Account__c = accountId;
         addr.AddressType__c = ADDRESS_TYPE_HQ;
-        addr.AddressCompanyName__c = corpName;
         return addr;
     }
 

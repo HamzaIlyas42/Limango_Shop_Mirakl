@@ -477,10 +477,10 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         System.assertEquals('WEEE-DE-12345', a.WeeeRegistrationNumber__c);
     }
 
-    // ── Address__c.AddressCompanyName__c from pro_details.corporate_name ─────
+    // ── pro_details.corporate_name → Account.Name; HQ Address__c stub without AddressCompanyName__c ──
 
     @IsTest
-    static void testSyncShopsFromJson_addressCompanyName() {
+    static void testSyncShopsFromJson_corporateNameToAccountName() {
         insertStubAccount('999052');
         String json = '{"total_count":1,"shops":[' + shopJsonFull(999052) + ']}';
 
@@ -490,14 +490,16 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
         System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
 
-        Account a = [SELECT Id FROM Account WHERE MerchantId__c = '999052'];
+        Account a = [SELECT Id, Name FROM Account WHERE MerchantId__c = '999052'];
+        System.assertEquals('Full Corp GmbH', a.Name, 'Account.Name should follow pro_details.corporate_name');
+
         Address__c addr = [
             SELECT AddressCompanyName__c
             FROM Address__c
             WHERE Account__c = :a.Id AND AddressType__c = 'Headquarter'
             LIMIT 1
         ];
-        System.assertEquals('Full Corp GmbH', addr.AddressCompanyName__c);
+        System.assertEquals(null, addr.AddressCompanyName__c);
     }
 
     // ── Contract: ReturnPolicy, LeadTimeToShip, ShippingCountry, ShippingTypes ──
