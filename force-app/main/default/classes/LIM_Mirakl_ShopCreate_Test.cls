@@ -111,7 +111,12 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_success_updatesMerchantId() {
-        Account acc = new Account(Name = 'Shop Test Account', Shopname__c = 'Shop Test Account', CommercialRegisterNumber__c = 'CR123');
+        Account acc = new Account(
+            Name = 'Shop Test Account',
+            Shopname__c = 'Shop Test Account',
+            CommercialRegisterNumber__c = 'CR123',
+            SalesChannel__c = 'Germany'
+        );
         insert acc;
 
         Contact con = new Contact(
@@ -141,6 +146,7 @@ private class LIM_Mirakl_ShopCreate_Test {
         insert ctr;
         ctr.Status = 'Activated';
         ctr.ActivatedDate = Date.today();
+        ctr.Sla__c = 'Contract SLA body text';
         update ctr;
 
         PartnerIntegration__c pi = new PartnerIntegration__c(CompanyName__c = acc.Id);
@@ -161,11 +167,24 @@ private class LIM_Mirakl_ShopCreate_Test {
         System.assertEquals('MIRAKL_123', results[0].merchantId, 'MerchantId should be set');
         System.assert(results[0].requestJson != null, 'Request JSON should be set');
         System.assert(results[0].responseJson != null, 'Response JSON should be set');
+        System.assert(
+            results[0].requestJson.contains('"channels"') && results[0].requestJson.contains('DE'),
+            'Request should include Mirakl channels from SalesChannel__c'
+        );
+        System.assert(
+            results[0].requestJson.contains('shop_additional_fields') &&
+            results[0].requestJson.contains('Contract SLA body text'),
+            'Request should include shop_additional_fields from Contract Sla__c'
+        );
     }
 
     @isTest
     static void createShop_shopError_returnsError() {
-        Account acc = new Account(Name = 'Shop Error Account', Shopname__c = 'Shop Error Account', CommercialRegisterNumber__c = 'CR456');
+        Account acc = new Account(
+            Name = 'Shop Error Account',
+            Shopname__c = 'Shop Error Account',
+            CommercialRegisterNumber__c = 'CR456'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -212,7 +231,11 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_httpFailure_returnsError() {
-        Account acc = new Account(Name = 'Shop HTTP Fail Account', Shopname__c = 'Shop HTTP Fail Account', CommercialRegisterNumber__c = 'CR789');
+        Account acc = new Account(
+            Name = 'Shop HTTP Fail Account',
+            Shopname__c = 'Shop HTTP Fail Account',
+            CommercialRegisterNumber__c = 'CR789'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -321,7 +344,11 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_noActivatedMarketplaceContract_returns999() {
-        Account acc = new Account(Name = 'No Contract Account', Shopname__c = 'No Contract Shop', CommercialRegisterNumber__c = 'CR');
+        Account acc = new Account(
+            Name = 'No Contract Account',
+            Shopname__c = 'No Contract Shop',
+            CommercialRegisterNumber__c = 'CR'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -356,7 +383,11 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_civilityMrs_mapsCorrectly() {
-        Account acc = new Account(Name = 'Civility Account', Shopname__c = 'Civility Shop', CommercialRegisterNumber__c = 'CR');
+        Account acc = new Account(
+            Name = 'Civility Account',
+            Shopname__c = 'Civility Shop',
+            CommercialRegisterNumber__c = 'CR'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -437,7 +468,12 @@ private class LIM_Mirakl_ShopCreate_Test {
                 AddressStatus__c = 'Active',
                 BusinessUnit__c = 'Marketplace'
             );
-            a.put('Address__Street__s', addrType == 'InvoiceAddress' ? 'Invoice-Weg 23' : addrType == 'AddressForReturns' ? 'Return-Weg 23' : 'Headquarter-Platz 17');
+            a.put(
+                'Address__Street__s',
+                addrType == 'InvoiceAddress'
+                    ? 'Invoice-Weg 23'
+                    : addrType == 'AddressForReturns' ? 'Return-Weg 23' : 'Headquarter-Platz 17'
+            );
             a.put('Address__PostalCode__s', '12345');
             a.put('Address__City__s', 'Hamburg');
             a.put('Address__CountryCode__s', 'DE');
@@ -523,7 +559,11 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_existingUser_sendsExistingUserPayload() {
-        Account acc = new Account(Name = 'Existing User Account', Shopname__c = 'Existing User Shop', CommercialRegisterNumber__c = 'CR_EU');
+        Account acc = new Account(
+            Name = 'Existing User Account',
+            Shopname__c = 'Existing User Shop',
+            CommercialRegisterNumber__c = 'CR_EU'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -578,7 +618,11 @@ private class LIM_Mirakl_ShopCreate_Test {
 
     @isTest
     static void createShop_combinedRoleIncludesMiraklInvitation_succeeds() {
-        Account acc = new Account(Name = 'Multi Role Account', Shopname__c = 'Multi Role Shop', CommercialRegisterNumber__c = 'CR_MR');
+        Account acc = new Account(
+            Name = 'Multi Role Account',
+            Shopname__c = 'Multi Role Shop',
+            CommercialRegisterNumber__c = 'CR_MR'
+        );
         insert acc;
         Contact con = new Contact(
             AccountId = acc.Id,
@@ -624,6 +668,21 @@ private class LIM_Mirakl_ShopCreate_Test {
         System.assert(
             results[0].requestJson != null && results[0].requestJson.contains('"new_user"'),
             'Request JSON should contain new_user (ExistingMiraklUser__c defaults to No)'
+        );
+    }
+
+    @isTest
+    static void miraklChannelCode_mapsLabelsAndReturnsNullForUnknown() {
+        System.assertEquals('DE', LIM_Mirakl_ShopCreate.miraklChannelCodeForSalesChannel('Germany'), 'Germany → DE');
+        System.assertEquals(
+            'PL',
+            LIM_Mirakl_ShopCreate.miraklChannelCodeForSalesChannel('poland'),
+            'Case-insensitive Poland → PL'
+        );
+        System.assertEquals(
+            null,
+            LIM_Mirakl_ShopCreate.miraklChannelCodeForSalesChannel('France'),
+            'Unknown label → null'
         );
     }
 }

@@ -1,7 +1,7 @@
 /**
  * LIM_Mirakl_ShopsSyncFromMirakl
- * GET /api/shops (or inline JSON), parse Mirakl shops[], **update** existing Account by MerchantId__c
- * (no Account insert). Address__c (Headquarter), Contact (Mirakl Invitation) for matched Accounts only.
+ * GET /api/shops (or inline JSON), parse Mirakl shops[], **update** existing Account matched by MerchantId__c
+ * (no Account insert). Only the 27 Mirakl→Salesforce field mappings documented on the integration spec are synced.
  * Exposed to Flow via Invocable.
  */
 public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
@@ -83,6 +83,22 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         'UK' => 'United Kingdom'
     };
 
+    /**
+     * Mirakl shop_state values (often ALL CAPS) → Salesforce SellerAccountStatus__c picklist API values.
+     * Extend when Mirakl adds states or org picklist changes.
+     */
+    private static final Map<String, String> MIRAKL_SHOP_STATE_TO_SF = new Map<String, String>{
+        'OPEN' => 'Open',
+        'CLOSED' => 'Closed',
+        'SUSPENDED' => 'Suspended',
+        'PENDING' => 'Pending'
+    };
+
+    /** Mirakl premium_state (often ALL CAPS) → Salesforce PremiumRule__c picklist API values. */
+    private static final Map<String, String> MIRAKL_PREMIUM_STATE_TO_SF = new Map<String, String>{
+        'PREMIUM' => 'Premium'
+    };
+
     private static Map<String, String> buildAlpha3ToAlpha2() {
         Map<String, String> rev = new Map<String, String>();
         for (String a2 : COUNTRY_ALPHA2_TO_ALPHA3.keySet()) {
@@ -97,40 +113,44 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
     // ── Invocable ─────────────────────────────────────────
     public class Input {
         @InvocableVariable(
-            description = 'Optional Mirakl shops JSON root with shops[]. If blank, performs GET /api/shops via LIM_Mirakl_Integration.'
+            description='Optional Mirakl shops JSON root with shops[]. If blank, performs GET /api/shops via LIM_Mirakl_Integration.'
         )
         public String jsonBody;
 
         @InvocableVariable(
-            description = 'Optional UTC instant for Mirakl incremental sync. When set (and jsonBody is blank), GET uses /api/shops?updated_since=<ISO8601 URL-encoded>, e.g. 2026-02-19T00:00:00Z.'
+            description='Optional UTC instant for Mirakl incremental sync. When set (and jsonBody is blank), GET uses /api/shops?updated_since=<ISO8601 URL-encoded>, e.g. 2026-02-19T00:00:00Z.'
         )
         public Datetime updatedSince;
     }
 
     public class Output {
-        @InvocableVariable(description = 'Whether the HTTP call (if any) and DML sync completed without blocking errors')
+        @InvocableVariable(description='Whether the HTTP call (if any) and DML sync completed without blocking errors')
         public Boolean success;
 
-        @InvocableVariable(description = 'HTTP status code from Mirakl when a callout was made; 200 after successful JSON-only sync')
+        @InvocableVariable(
+            description='HTTP status code from Mirakl when a callout was made; 200 after successful JSON-only sync'
+        )
         public Integer statusCode;
 
-        @InvocableVariable(description = 'Error message when sync fails')
+        @InvocableVariable(description='Error message when sync fails')
         public String errorMessage;
 
-        @InvocableVariable(description = 'Audit JSON for the request (GET descriptor or supplied jsonBody)')
+        @InvocableVariable(description='Audit JSON for the request (GET descriptor or supplied jsonBody)')
         public String requestJson;
 
-        @InvocableVariable(description = 'Raw Mirakl response body used for parsing (or same as input when jsonBody was supplied)')
+        @InvocableVariable(
+            description='Raw Mirakl response body used for parsing (or same as input when jsonBody was supplied)'
+        )
         public String responseJson;
 
         @InvocableVariable(
-            description = 'Human-readable sync outcome: counts updated vs skipped (no Account in Salesforce for merchant id). Not an error.'
+            description='Human-readable sync outcome: counts updated vs skipped (no Account in Salesforce for merchant id). Not an error.'
         )
         public String summaryMessage;
     }
 
     @InvocableMethod(
-        description = 'Syncs Mirakl shops into Salesforce (Account, Address, Contact) and returns audit fields for Job__c.'
+        description='Syncs Mirakl shops into Salesforce (Account, Address HQ company name, PartnerIntegration, Contract) per integration field spec.'
     )
     public static List<Output> syncShops(List<Input> inputs) {
         List<Output> results = new List<Output>();
@@ -172,7 +192,10 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         while (offset < 200000 && pagesFetched < 1000) {
             if (Limits.getCallouts() >= Limits.getLimitCallouts()) {
                 out.success = false;
-                out.errorMessage = 'Callout limit reached while paging Mirakl /api/shops (fetched ' + pagesFetched + ' page(s)).';
+                out.errorMessage =
+                    'Callout limit reached while paging Mirakl /api/shops (fetched ' +
+                    pagesFetched +
+                    ' page(s)).';
                 out.statusCode = lastHttpStatus != null ? lastHttpStatus : 500;
                 return out;
             }
@@ -193,7 +216,14 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 out.success = false;
                 out.errorMessage = res.errorMessage;
                 out.statusCode = res.statusCode;
-                out.requestJson = buildSyncAuditJson(updatedSince, pagesFetched, offset, pageSize, allShops.size(), relativePath);
+                out.requestJson = buildSyncAuditJson(
+                    updatedSince,
+                    pagesFetched,
+                    offset,
+                    pageSize,
+                    allShops.size(),
+                    relativePath
+                );
                 return out;
             }
 
@@ -226,10 +256,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
 
         Map<String, Object> mergedRoot = new Map<String, Object>();
         mergedRoot.put('shops', allShops);
-        mergedRoot.put(
-            'total_count',
-            totalCountFromApi != null ? totalCountFromApi : allShops.size()
-        );
+        mergedRoot.put('total_count', totalCountFromApi != null ? totalCountFromApi : allShops.size());
 
         String mergedJson = JSON.serialize(mergedRoot);
         out.statusCode = lastHttpStatus != null ? lastHttpStatus : 200;
@@ -297,9 +324,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         List<String> pairs = new List<String>();
         if (updatedSinceUtc != null) {
             String isoUtc = updatedSinceUtc.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-            pairs.add(
-                QUERY_UPDATED_SINCE + '=' + EncodingUtil.urlEncode(isoUtc, 'UTF-8')
-            );
+            pairs.add(QUERY_UPDATED_SINCE + '=' + EncodingUtil.urlEncode(isoUtc, 'UTF-8'));
         }
         Integer m = max != null && max > 0 ? max : SHOPS_PAGE_SIZE_MAX;
         if (m > 100) {
@@ -320,11 +345,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
             return MIRAKL_SHOPS_RELATIVE_PATH;
         }
         String isoUtc = updatedSinceUtc.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-        return MIRAKL_SHOPS_RELATIVE_PATH +
-            '?' +
-            QUERY_UPDATED_SINCE +
-            '=' +
-            EncodingUtil.urlEncode(isoUtc, 'UTF-8');
+        return MIRAKL_SHOPS_RELATIVE_PATH + '?' + QUERY_UPDATED_SINCE + '=' + EncodingUtil.urlEncode(isoUtc, 'UTF-8');
     }
 
     /** Parse JSON and sync (no callout). */
@@ -407,8 +428,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 for (User u : [
                     SELECT Id, Email
                     FROM User
-                    WHERE Email IN :allAssigneeEmails
-                    AND IsActive = true
+                    WHERE Email IN :allAssigneeEmails AND IsActive = TRUE
                 ]) {
                     userIdByEmail.put(u.Email.toLowerCase(), u.Id);
                 }
@@ -436,7 +456,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 if (String.isBlank(merchantKey) || !existingAccountIdByMerchant.containsKey(merchantKey)) {
                     continue;
                 }
-                Account a = buildAccountFromShop(shop, merchantKey);
+                Account a = buildAccountFromShop(shop);
                 a.Id = existingAccountIdByMerchant.get(merchantKey);
                 Map<String, String> roles = assigneeEmailByRoleByMerchant.get(merchantKey);
                 if (roles != null) {
@@ -451,7 +471,11 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 }
                 accountUpdateByMerchant.put(merchantKey, a);
             }
-            List<Account> accountsToUpdate = accountUpdateByMerchant.values();
+            List<String> merchantOrder = new List<String>(accountUpdateByMerchant.keySet());
+            List<Account> accountsToUpdate = new List<Account>();
+            for (String mk : merchantOrder) {
+                accountsToUpdate.add(accountUpdateByMerchant.get(mk));
+            }
 
             List<String> errors = new List<String>();
             Map<String, Id> merchantToAccountId = new Map<String, Id>();
@@ -459,15 +483,13 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
             if (!accountsToUpdate.isEmpty()) {
                 Database.SaveResult[] accResults = Database.update(accountsToUpdate, false);
                 for (Integer i = 0; i < accResults.size(); i++) {
+                    String mk = merchantOrder[i];
                     if (!accResults[i].isSuccess()) {
                         for (Database.Error err : accResults[i].getErrors()) {
-                            errors.add('Account ' + merchantKey(i, accountsToUpdate) + ': ' + err.getMessage());
+                            errors.add('Account ' + mk + ': ' + err.getMessage());
                         }
                     } else {
-                        merchantToAccountId.put(
-                            accountsToUpdate[i].MerchantId__c,
-                            accountsToUpdate[i].Id
-                        );
+                        merchantToAccountId.put(mk, accountsToUpdate[i].Id);
                     }
                 }
             }
@@ -492,17 +514,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                 hqAddressByAccount.put(addr.Account__c, addr.Id);
             }
 
-            Map<Id, Contact> miraklContactByAccount = new Map<Id, Contact>();
-            for (Contact c : [
-                SELECT Id, AccountId, RoleMarketplace__c
-                FROM Contact
-                WHERE AccountId IN :accountIds AND RoleMarketplace__c INCLUDES (:ROLE_MIRAKL_INVITATION)
-            ]) {
-                miraklContactByAccount.put(c.AccountId, c);
-            }
-
             List<Address__c> addressUpsert = new List<Address__c>();
-            List<Contact> contactUpsert = new List<Contact>();
 
             for (Map<String, Object> shop : shopMaps) {
                 String merchantKey = extractMerchantId(shop);
@@ -518,28 +530,17 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
                     }
                     addressUpsert.add(addr);
                 }
-
-                Contact existingContact = miraklContactByAccount.get(accountId);
-                Contact ct = buildContact(shop, accountId, existingContact);
-                if (existingContact != null) {
-                    ct.Id = existingContact.Id;
-                }
-                contactUpsert.add(ct);
             }
 
             if (!addressUpsert.isEmpty()) {
                 Database.UpsertResult[] ar = Database.upsert(addressUpsert, false);
                 collectDmlErrors(ar, errors, 'Address__c');
             }
-            if (!contactUpsert.isEmpty()) {
-                Database.UpsertResult[] cr = Database.upsert(contactUpsert, false);
-                collectDmlErrors(cr, errors, 'Contact');
-            }
 
-            // ── Update PartnerIntegration__c.OwnerId from ONBOARDING_MANAGER ──
+            // ── Update PartnerIntegration__c: MerchantId__c + OwnerId from ONBOARDING_MANAGER ──
             Map<Id, PartnerIntegration__c> latestPiByAccount = new Map<Id, PartnerIntegration__c>();
             for (PartnerIntegration__c pi : [
-                SELECT Id, CompanyName__c, OwnerId
+                SELECT Id, CompanyName__c, OwnerId, MerchantId__c
                 FROM PartnerIntegration__c
                 WHERE CompanyName__c IN :accountIds
                 ORDER BY CreatedDate DESC
@@ -552,21 +553,54 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
             List<PartnerIntegration__c> piToUpdate = new List<PartnerIntegration__c>();
             for (String mk : merchantToAccountId.keySet()) {
                 Id accId = merchantToAccountId.get(mk);
-                Map<String, String> piRoles = assigneeEmailByRoleByMerchant.get(mk);
-                if (piRoles == null) continue;
-                String omEmail = piRoles.get('ONBOARDING_MANAGER');
-                if (String.isBlank(omEmail)) continue;
-                Id omUserId = userIdByEmail.get(omEmail.toLowerCase());
-                if (omUserId == null) continue;
                 PartnerIntegration__c pi = latestPiByAccount.get(accId);
-                if (pi != null) {
-                    pi.OwnerId = omUserId;
-                    piToUpdate.add(pi);
+                if (pi == null)
+                    continue;
+                pi.MerchantId__c = mk;
+                Map<String, String> piRoles = assigneeEmailByRoleByMerchant.get(mk);
+                if (piRoles != null) {
+                    String omEmail = piRoles.get('ONBOARDING_MANAGER');
+                    if (String.isNotBlank(omEmail) && userIdByEmail.containsKey(omEmail.toLowerCase())) {
+                        pi.OwnerId = userIdByEmail.get(omEmail.toLowerCase());
+                    }
                 }
+                piToUpdate.add(pi);
             }
             if (!piToUpdate.isEmpty()) {
                 Database.SaveResult[] piResults = Database.update(piToUpdate, false);
                 collectSaveErrors(piResults, errors, 'PartnerIntegration__c');
+            }
+
+            // ── Update Contract fields from Mirakl ──────────────────────
+            Map<Id, Contract> latestContractByAccount = new Map<Id, Contract>();
+            for (Contract c : [
+                SELECT Id, AccountId
+                FROM Contract
+                WHERE AccountId IN :accountIds
+                ORDER BY CreatedDate DESC
+            ]) {
+                if (!latestContractByAccount.containsKey(c.AccountId)) {
+                    latestContractByAccount.put(c.AccountId, c);
+                }
+            }
+            List<Contract> contractsToUpdate = new List<Contract>();
+            for (Map<String, Object> shop : shopMaps) {
+                String merchantKey = extractMerchantId(shop);
+                if (!merchantToAccountId.containsKey(merchantKey)) {
+                    continue;
+                }
+                Id accId = merchantToAccountId.get(merchantKey);
+                Contract existing = latestContractByAccount.get(accId);
+                if (existing == null) {
+                    continue;
+                }
+                Contract ct = buildContract(shop, accId);
+                ct.Id = existing.Id;
+                contractsToUpdate.add(ct);
+            }
+            if (!contractsToUpdate.isEmpty()) {
+                Database.SaveResult[] ctResults = Database.update(contractsToUpdate, false);
+                collectSaveErrors(ctResults, errors, 'Contract');
             }
 
             out.success = errors.isEmpty();
@@ -581,10 +615,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
     }
 
     private static String buildSyncSummaryMessage(Integer accountsUpdatedOk, List<String> skippedMerchantIds) {
-        String msg =
-            'Accounts updated successfully: ' +
-            accountsUpdatedOk +
-            '. ';
+        String msg = 'Accounts updated successfully: ' + accountsUpdatedOk + '. ';
         if (skippedMerchantIds == null || skippedMerchantIds.isEmpty()) {
             msg += 'No merchants skipped (each had an Account with matching MerchantId__c).';
         } else {
@@ -598,11 +629,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         return msg;
     }
 
-    private static void collectDmlErrors(
-        Database.UpsertResult[] results,
-        List<String> errors,
-        String entity
-    ) {
+    private static void collectDmlErrors(Database.UpsertResult[] results, List<String> errors, String entity) {
         for (Database.UpsertResult ur : results) {
             if (!ur.isSuccess()) {
                 for (Database.Error err : ur.getErrors()) {
@@ -612,11 +639,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         }
     }
 
-    private static void collectSaveErrors(
-        Database.SaveResult[] results,
-        List<String> errors,
-        String entity
-    ) {
+    private static void collectSaveErrors(Database.SaveResult[] results, List<String> errors, String entity) {
         for (Database.SaveResult sr : results) {
             if (!sr.isSuccess()) {
                 for (Database.Error err : sr.getErrors()) {
@@ -626,11 +649,6 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         }
     }
 
-    private static String merchantKey(Integer i, List<Account> accounts) {
-        return accounts[i].MerchantId__c;
-    }
-
-    private static final String ROLE_MIRAKL_INVITATION = 'Mirakl Invitation';
     private static final String ADDRESS_TYPE_HQ = 'Headquarter';
 
     private static String extractMerchantId(Map<String, Object> shop) {
@@ -641,9 +659,9 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         return String.valueOf(sid);
     }
 
-    private static Account buildAccountFromShop(Map<String, Object> shop, String merchantKey) {
+    private static Account buildAccountFromShop(Map<String, Object> shop) {
         Account a = new Account();
-        a.MerchantId__c = merchantKey;
+        // Account.MerchantId__c is lookup-only; not written from Mirakl on update.
 
         String shopName = stringVal(shop.get('shop_name'));
         a.Shopname__c = shopName;
@@ -659,143 +677,88 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         Map<String, Object> contactInfo = childMap(shop, 'contact_informations');
         if (contactInfo != null) {
             a.Website = stringVal(contactInfo.get('web_site'));
-            String countrySrc = firstNonBlank(
-                stringVal(contactInfo.get('country')),
-                stringVal(shop.get('shipping_country'))
-            );
-            a.CommercialCountry__c = toCommercialCountry(countrySrc);
-        } else {
-            a.CommercialCountry__c = toCommercialCountry(stringVal(shop.get('shipping_country')));
         }
+        a.CommercialCountry__c = toCommercialCountry(stringVal(shop.get('shipping_country')));
 
         Map<String, Object> commission = childMap(shop, 'commission');
         if (commission != null) {
             String gridLabel = stringVal(commission.get('grid_label'));
-            Decimal pct = parseCommissionPercent(gridLabel);
-            if (pct != null) {
-                a.Commission__c = pct / 100;
+            if (String.isNotBlank(gridLabel)) {
+                a.CommissionCustomRate__c = gridLabel;
+            }
+            String linkedToDefault = stringVal(commission.get('linked_to_default_grid'));
+            if (linkedToDefault != null) {
+                a.CommissionStandardRate__c = linkedToDefault;
             }
         }
 
         Map<String, Object> proDetails = childMap(shop, 'pro_details');
-        Map<String, Object> defaultBilling = childMap(shop, 'default_billing_information');
-        Map<String, Object> corp = defaultBilling != null
-            ? childMap(defaultBilling, 'corporate_information')
-            : null;
-
-        String regNum = corp != null ? stringVal(corp.get('company_registration_number')) : null;
-        String idNum = proDetails != null ? stringVal(proDetails.get('identification_number')) : null;
-        a.CommercialRegisterNumber__c = firstNonBlank(regNum, idNum);
-
         if (proDetails != null) {
-            a.VatIdCompany__c = firstNonBlank(
-                stringVal(proDetails.get('VAT_number')),
-                stringVal(proDetails.get('tax_identification_number'))
-            );
-            String lucid = stringVal(proDetails.get('lucid_number'));
-            if (String.isNotBlank(lucid)) {
-                a.LucidNumber__c = lucid;
+            a.CommercialRegisterNumber__c = stringVal(proDetails.get('identification_number'));
+        }
+
+        List<Object> additionalFields = (List<Object>) shop.get('shop_additional_fields');
+        String weeeOnly = extractAdditionalField(additionalFields, 'weee');
+        if (String.isNotBlank(weeeOnly)) {
+            a.WeeeRegistrationNumber__c = weeeOnly;
+        }
+
+        String shopState = stringVal(shop.get('shop_state'));
+        if (String.isNotBlank(shopState)) {
+            a.SellerAccountStatus__c = toSellerAccountStatusPicklist(shopState);
+        }
+        String premiumState = stringVal(shop.get('premium_state'));
+        if (String.isNotBlank(premiumState)) {
+            a.PremiumRule__c = toPremiumRulePicklist(premiumState);
+        }
+        a.ImmunityGrantedUntil__c = parseDateFromIso(stringVal(shop.get('immunity_date')));
+        a.ClosedFrom__c = parseDateFromIso(stringVal(shop.get('closed_from')));
+        a.ClosedTo__c = parseDateFromIso(stringVal(shop.get('closed_to')));
+
+        Map<String, Object> paymentDetails = childMap(shop, 'payment_details');
+        if (paymentDetails != null) {
+            Object blocked = paymentDetails.get('payment_blocked');
+            if (blocked != null) {
+                a.BlockPayment__c = Boolean.valueOf(String.valueOf(blocked));
             }
-            String weee = stringVal(proDetails.get('weee_registration_number'));
-            if (String.isNotBlank(weee)) {
-                a.WeeeRegistrationNumber__c = weee;
+        }
+
+        Boolean eudr = parseBoolAdditionalField(additionalFields, 'eudrproducts');
+        if (eudr != null)
+            a.EudrRelevance__c = eudr;
+        Boolean electronic = parseBoolAdditionalField(additionalFields, 'electronicarticles');
+        if (electronic != null)
+            a.ElectronicArticles__c = electronic;
+        Boolean batteries = parseBoolAdditionalField(additionalFields, 'articleswbatteries');
+        if (batteries != null)
+            a.ArticlesWithBatteries__c = batteries;
+        String batteryReg = extractAdditionalField(additionalFields, 'batteryreg');
+        if (String.isNotBlank(batteryReg)) {
+            try {
+                a.BatteryRegistrationNumberGermany__c = Decimal.valueOf(batteryReg);
+            } catch (Exception e) {
             }
         }
 
         return a;
     }
 
+    /** Headquarter row: only AddressCompanyName__c from pro_details.corporate_name. */
     private static Address__c buildAddress(Map<String, Object> shop, Id accountId) {
-        Map<String, Object> defaultBilling = childMap(shop, 'default_billing_information');
-        Map<String, Object> regAddr = defaultBilling != null
-            ? childMap(defaultBilling, 'registration_address')
-            : null;
-        Map<String, Object> contactInfo = childMap(shop, 'contact_informations');
-
-        Map<String, Object> src = regAddr;
-        if (!hasAddressData(regAddr)) {
-            src = contactInfo;
+        Map<String, Object> proDetailsAddr = childMap(shop, 'pro_details');
+        if (proDetailsAddr == null) {
+            return null;
         }
-        if (!hasAddressData(src)) {
+        String corpName = stringVal(proDetailsAddr.get('corporate_name'));
+        if (String.isBlank(corpName)) {
             return null;
         }
 
         Address__c addr = new Address__c();
         addr.Account__c = accountId;
         addr.AddressType__c = ADDRESS_TYPE_HQ;
-
-        String street = firstNonBlank(
-            stringVal(getFromMap(src, 'street1')),
-            stringVal(getFromMap(src, 'street_1'))
-        );
-        String street2 = firstNonBlank(
-            stringVal(getFromMap(src, 'street2')),
-            stringVal(getFromMap(src, 'street_2'))
-        );
-        if (String.isNotBlank(street2)) {
-            street = (street != null ? street + '\n' : '') + street2;
-        }
-        addr.Address__Street__s = street;
-        addr.Address__PostalCode__s = stringVal(getFromMap(src, 'zip_code'));
-        addr.Address__City__s = stringVal(getFromMap(src, 'city'));
-
-        String countryIso = firstNonBlank(
-            stringVal(getFromMap(src, 'country_iso_code')),
-            stringVal(getFromMap(src, 'country'))
-        );
-        addr.Address__CountryCode__s = toCountryCode(countryIso);
-
+        addr.AddressCompanyName__c = corpName;
         return addr;
-    }
-
-    private static Boolean hasAddressData(Map<String, Object> m) {
-        if (m == null) {
-            return false;
-        }
-        return String.isNotBlank(stringVal(getFromMap(m, 'street1'))) ||
-            String.isNotBlank(stringVal(getFromMap(m, 'street_1'))) ||
-            String.isNotBlank(stringVal(getFromMap(m, 'city'))) ||
-            String.isNotBlank(stringVal(getFromMap(m, 'zip_code')));
-    }
-
-    private static Contact buildContact(Map<String, Object> shop, Id accountId, Contact existing) {
-        Map<String, Object> contactInfo = childMap(shop, 'contact_informations');
-        Contact c = new Contact();
-        c.AccountId = accountId;
-        c.RoleMarketplace__c = mergeRoleMarketplace(
-            existing != null ? existing.RoleMarketplace__c : null,
-            ROLE_MIRAKL_INVITATION
-        );
-
-        if (contactInfo != null) {
-            c.FirstName = stringVal(contactInfo.get('firstname'));
-            c.LastName = firstNonBlank(stringVal(contactInfo.get('lastname')), 'Unknown');
-            c.Email = stringVal(contactInfo.get('email'));
-            c.Phone = stringVal(contactInfo.get('phone'));
-            c.MobilePhone = stringVal(contactInfo.get('phone_secondary'));
-            String civ = stringVal(contactInfo.get('civility'));
-            c.Title = civ;
-            c.Salutation = toSalesforceSalutation(civ);
-        } else {
-            c.LastName = 'Unknown';
-        }
-
-        return c;
-    }
-
-    /**
-     * Merges a required role value into an existing multiselect picklist string.
-     * Preserves other role tokens so upsert does not wipe combined roles.
-     */
-    private static String mergeRoleMarketplace(String existing, String requiredRole) {
-        if (String.isBlank(existing)) {
-            return requiredRole;
-        }
-        Set<String> roles = new Set<String>(existing.split(';'));
-        roles.add(requiredRole);
-        List<String> sorted = new List<String>(roles);
-        sorted.sort();
-        return String.join(sorted, ';');
     }
 
     private static Map<String, Object> childMap(Map<String, Object> parent, String key) {
@@ -809,20 +772,12 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         return null;
     }
 
-    private static Object getFromMap(Map<String, Object> m, String key) {
-        return m != null ? m.get(key) : null;
-    }
-
     private static String stringVal(Object o) {
         if (o == null) {
             return null;
         }
         String s = String.valueOf(o);
         return String.isBlank(s) || s.equalsIgnoreCase('null') ? null : s;
-    }
-
-    private static String firstNonBlank(String a, String b) {
-        return String.isNotBlank(a) ? a : b;
     }
 
     private static String toCountryCode(String miraklCountry) {
@@ -841,26 +796,129 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
 
     private static String toCommercialCountry(String miraklCountry) {
         String iso2 = toCountryCode(miraklCountry);
-        if (iso2 == null) return null;
+        if (iso2 == null)
+            return null;
         return ISO2_TO_COMMERCIAL_COUNTRY.get(iso2);
     }
 
-    private static String toSalesforceSalutation(String miraklCivility) {
-        if (String.isBlank(miraklCivility)) return null;
-        String t = miraklCivility.trim();
-        if (t.equalsIgnoreCase('Mr'))   return 'Mr.';
-        if (t.equalsIgnoreCase('Mrs'))  return 'Mrs.';
-        if (t.equalsIgnoreCase('Miss')) return 'Ms.';
-        return null;
-    }
-
-    private static Decimal parseCommissionPercent(String gridLabel) {
-        if (String.isBlank(gridLabel)) {
+    /** Maps Mirakl shop_state to Salesforce picklist (e.g. OPEN → Open). */
+    private static String toSellerAccountStatusPicklist(String miraklState) {
+        if (String.isBlank(miraklState)) {
             return null;
         }
-        Matcher m = Pattern.compile('(\\d+(?:\\.\\d+)?)').matcher(gridLabel);
-        if (m.find()) {
-            return Decimal.valueOf(m.group(1));
+        String key = miraklState.trim().toUpperCase();
+        if (MIRAKL_SHOP_STATE_TO_SF.containsKey(key)) {
+            return MIRAKL_SHOP_STATE_TO_SF.get(key);
+        }
+        return miraklState.trim();
+    }
+
+    /** Maps Mirakl premium_state to Salesforce PremiumRule__c picklist (e.g. PREMIUM → Premium). */
+    private static String toPremiumRulePicklist(String miraklPremium) {
+        if (String.isBlank(miraklPremium)) {
+            return null;
+        }
+        String key = miraklPremium.trim().toUpperCase();
+        if (MIRAKL_PREMIUM_STATE_TO_SF.containsKey(key)) {
+            return MIRAKL_PREMIUM_STATE_TO_SF.get(key);
+        }
+        return miraklPremium.trim();
+    }
+
+    /**
+     * Mirakl shipping_zone_code (ISO2 or ISO3) → Contract.ShippingCountry__c restricted picklist.
+     * Reuses the same country labels as CommercialCountry where possible.
+     */
+    private static String toContractShippingCountry(String zoneCode) {
+        if (String.isBlank(zoneCode)) {
+            return null;
+        }
+        String iso2 = toCountryCode(zoneCode.trim());
+        if (iso2 != null && ISO2_TO_COMMERCIAL_COUNTRY.containsKey(iso2)) {
+            return ISO2_TO_COMMERCIAL_COUNTRY.get(iso2);
+        }
+        return zoneCode.trim();
+    }
+
+    private static Contract buildContract(Map<String, Object> shop, Id accountId) {
+        Contract c = new Contract();
+        c.AccountId = accountId;
+
+        String returnPolicy = stringVal(shop.get('return_policy'));
+        if (String.isNotBlank(returnPolicy)) {
+            c.ReturnPolicy__c = returnPolicy;
+        }
+
+        Map<String, Object> shipping = childMap(shop, 'shipping');
+        if (shipping != null) {
+            Object leadTime = shipping.get('lead_time_to_ship');
+            if (leadTime != null) {
+                try {
+                    c.LeadTimeToShip__c = Decimal.valueOf(String.valueOf(leadTime));
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        List<Object> shippings = (List<Object>) shop.get('shippings');
+        if (shippings != null && !shippings.isEmpty()) {
+            Set<String> zoneCodes = new Set<String>();
+            Set<String> typeLabels = new Set<String>();
+            for (Object s : shippings) {
+                Map<String, Object> sm = (Map<String, Object>) s;
+                String zoneCode = stringVal(sm.get('shipping_zone_code'));
+                if (String.isNotBlank(zoneCode)) {
+                    zoneCodes.add(zoneCode);
+                }
+                String typeLabel = stringVal(sm.get('shipping_type_label'));
+                if (String.isNotBlank(typeLabel)) {
+                    typeLabels.add(typeLabel);
+                }
+            }
+            if (!zoneCodes.isEmpty()) {
+                List<String> zoneList = new List<String>(zoneCodes);
+                zoneList.sort();
+                c.ShippingCountry__c = toContractShippingCountry(zoneList[0]);
+            }
+            if (!typeLabels.isEmpty()) {
+                List<String> typeList = new List<String>(typeLabels);
+                typeList.sort();
+                c.ShippingTypes__c = String.join(typeList, ';');
+            }
+        }
+
+        return c;
+    }
+
+    private static Date parseDateFromIso(String isoStr) {
+        if (String.isBlank(isoStr)) {
+            return null;
+        }
+        try {
+            String datePart = isoStr.contains('T') ? isoStr.substringBefore('T') : isoStr.trim();
+            return Date.valueOf(datePart);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Boolean parseBoolAdditionalField(List<Object> additionalFields, String code) {
+        String val = extractAdditionalField(additionalFields, code);
+        if (String.isBlank(val)) {
+            return null;
+        }
+        return val.equalsIgnoreCase('true');
+    }
+
+    private static String extractAdditionalField(List<Object> additionalFields, String code) {
+        if (additionalFields == null || String.isBlank(code)) {
+            return null;
+        }
+        for (Object item : additionalFields) {
+            Map<String, Object> f = (Map<String, Object>) item;
+            if (code.equalsIgnoreCase(stringVal(f.get('code')))) {
+                return stringVal(f.get('value'));
+            }
         }
         return null;
     }

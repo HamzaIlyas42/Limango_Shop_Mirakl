@@ -113,6 +113,23 @@ public with sharing class LIM_Mirakl_ShopCreate {
         'JM' => 'JAM'
     };
 
+    /**
+     * Inverse of LIM_Mirakl_ShopsSyncFromMirakl.CHANNEL_CODE_TO_SALESCHANNEL — picklist label → Mirakl channel code.
+     * Keep in sync with that map and with Account.SalesChannel__c picklist API values.
+     */
+    private static final Map<String, String> SALESCHANNEL_LABEL_TO_CHANNEL_CODE = new Map<String, String>{
+        'Germany' => 'DE',
+        'Austria' => 'AT',
+        'Poland' => 'PL'
+    };
+
+    /**
+     * Mirakl shop additional field {@code code} for Contract SLA text ({@code shop_additional_fields}).
+     * Must match a SHOP additional field in the Mirakl operator (see GET /api/additional_fields?entities=SHOP).
+     * Change here if your operator uses a different code than the default.
+     */
+    private static final String MIRAKL_SHOP_SERVICE_AGREEMENTS_FIELD_CODE = 'service_agreements';
+
     // ── Input ─────────────────────────────────────────────
     public class Input {
         @InvocableVariable(
@@ -182,6 +199,7 @@ public with sharing class LIM_Mirakl_ShopCreate {
                     Id,
                     Name,
                     Shopname__c,
+                    SalesChannel__c,
                     CommercialRegisterNumber__c,
                     AccountManager__r.Email,
                     TechSupportManager__r.Email,
@@ -246,6 +264,29 @@ public with sharing class LIM_Mirakl_ShopCreate {
                 return result;
             }
 
+            String miraklChannelCode = null;
+            if (String.isNotBlank(acct.SalesChannel__c)) {
+                miraklChannelCode = miraklChannelCodeForSalesChannel(acct.SalesChannel__c.trim());
+                if (miraklChannelCode == null) {
+                    result.success = false;
+                    result.errorMessage =
+                        'SalesChannel__c must be one of: Germany, Austria, Poland. Got: ' + acct.SalesChannel__c;
+                    return result;
+                }
+            }
+
+            String contractSlaText = null;
+            List<Contract> contractSlaRows = [
+                SELECT Sla__c
+                FROM Contract
+                WHERE AccountId = :accountId AND Status = 'Activated'
+                ORDER BY LastModifiedDate DESC
+                LIMIT 1
+            ];
+            if (!contractSlaRows.isEmpty() && String.isNotBlank(contractSlaRows[0].Sla__c)) {
+                contractSlaText = contractSlaRows[0].Sla__c.trim();
+            }
+
             Map<String, Object> proDetails = new Map<String, Object>{
                 'identification_number' => acct.CommercialRegisterNumber__c
             };
@@ -287,6 +328,22 @@ public with sharing class LIM_Mirakl_ShopCreate {
             }
             if (!assigneeList.isEmpty()) {
                 shop.put('assignees', assigneeList);
+            }
+
+            if (miraklChannelCode != null) {
+                shop.put('channels', new List<String>{ miraklChannelCode });
+            }
+
+            if (String.isNotBlank(contractSlaText)) {
+                shop.put(
+                    'shop_additional_fields',
+                    new List<Object>{
+                        new Map<String, Object>{
+                            'code' => MIRAKL_SHOP_SERVICE_AGREEMENTS_FIELD_CODE,
+                            'value' => contractSlaText
+                        }
+                    }
+                );
             }
 
             // Mirakl expects shops[] array
@@ -357,6 +414,22 @@ public with sharing class LIM_Mirakl_ShopCreate {
         }
 
         return result;
+    }
+
+    /**
+     * @return Mirakl channel code (e.g. DE), or null if {@code salesChannelLabel} is not mappable.
+     */
+    @TestVisible
+    private static String miraklChannelCodeForSalesChannel(String salesChannelLabel) {
+        if (SALESCHANNEL_LABEL_TO_CHANNEL_CODE.containsKey(salesChannelLabel)) {
+            return SALESCHANNEL_LABEL_TO_CHANNEL_CODE.get(salesChannelLabel);
+        }
+        for (String label : SALESCHANNEL_LABEL_TO_CHANNEL_CODE.keySet()) {
+            if (label.equalsIgnoreCase(salesChannelLabel)) {
+                return SALESCHANNEL_LABEL_TO_CHANNEL_CODE.get(label);
+            }
+        }
+        return null;
     }
 
     // Mirakl authorized civility: Mr, Mrs, Miss, Neutral (case-sensitive)

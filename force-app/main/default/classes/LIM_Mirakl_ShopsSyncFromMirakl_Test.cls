@@ -1,5 +1,5 @@
 /**
- * Tests for LIM_Mirakl_ShopsSyncFromMirakl — JSON sync, negative paths, HTTP mock.
+ * Tests for LIM_Mirakl_ShopsSyncFromMirakl — JSON sync, negative paths, HTTP mock (27-field mapping only).
  */
 @IsTest
 private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
@@ -11,32 +11,10 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
             '"shop_name":"Test Mirakl Shop",' +
             '"shipping_country":"DEU",' +
             '"contact_informations":{' +
-            '"email":"mirakl_sync_test@example.com",' +
-            '"firstname":"John",' +
-            '"lastname":"Doe",' +
-            '"phone":"0301234567",' +
-            '"phone_secondary":"01701234567",' +
-            '"civility":"Mr",' +
-            '"web_site":"https://example.com",' +
-            '"street1":"Contact Street 1",' +
-            '"zip_code":"10115",' +
-            '"city":"Berlin",' +
-            '"country":"DEU"' +
-            '},' +
-            '"default_billing_information":{' +
-            '"registration_address":{' +
-            '"city":"Berlin",' +
-            '"country_iso_code":"DEU",' +
-            '"street_1":"Reg Street 1",' +
-            '"zip_code":"10115"' +
-            '},' +
-            '"corporate_information":{' +
-            '"company_registration_number":"HRB999001"' +
-            '}' +
+            '"web_site":"https://example.com"' +
             '},' +
             '"commission":{"grid_label":"DE 15%"},' +
             '"pro_details":{' +
-            '"VAT_number":"DE999001",' +
             '"identification_number":"ID999001"' +
             '}' +
             '}';
@@ -57,7 +35,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
     }
 
     @IsTest
-    static void testSyncShopsFromJson_createsAccountAddressContact() {
+    static void testSyncShopsFromJson_updatesAccountFields() {
         insertStubAccount('999001');
         String json = buildSampleJson(999001);
         Test.startTest();
@@ -68,7 +46,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         System.assertEquals(200, out.statusCode);
 
         Account a = [
-            SELECT Id, Name, MerchantId__c, Shopname__c, CommercialRegisterNumber__c, VatIdCompany__c
+            SELECT Id, Name, MerchantId__c, Shopname__c, CommercialRegisterNumber__c, Website, CommercialCountry__c
             FROM Account
             WHERE MerchantId__c = '999001'
             LIMIT 1
@@ -76,23 +54,16 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         System.assertEquals('999001', a.MerchantId__c);
         System.assertEquals('Stub 999001', a.Name, 'Account.Name must not be overwritten by sync');
         System.assertEquals('Test Mirakl Shop', a.Shopname__c, 'Shopname__c should be updated from Mirakl shop_name');
+        System.assertEquals('ID999001', a.CommercialRegisterNumber__c);
+        System.assertEquals('https://example.com', a.Website);
+        System.assertEquals('Germany', a.CommercialCountry__c);
 
-        Address__c addr = [
-            SELECT Id, AddressType__c, Address__Street__s, Address__City__s, Address__PostalCode__s, Address__CountryCode__s
+        Integer addrCount = [
+            SELECT COUNT()
             FROM Address__c
             WHERE Account__c = :a.Id AND AddressType__c = 'Headquarter'
-            LIMIT 1
         ];
-        System.assertEquals('DE', addr.Address__CountryCode__s);
-
-        Contact c = [
-            SELECT Id, FirstName, LastName, Email, RoleMarketplace__c
-            FROM Contact
-            WHERE AccountId = :a.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
-            LIMIT 1
-        ];
-        System.assertEquals('John', c.FirstName);
-        System.assertEquals('mirakl_sync_test@example.com', c.Email);
+        System.assertEquals(0, addrCount, 'No HQ Address without pro_details.corporate_name');
     }
 
     @IsTest
@@ -104,7 +75,9 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
     @IsTest
     static void testSyncShopsFromJson_missingShops() {
-        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson('{"total_count":0}');
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(
+            '{"total_count":0}'
+        );
         System.assertEquals(false, out.success);
     }
 
@@ -130,10 +103,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         String json = buildSampleJson(999010);
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
         System.assert(out.success, out.errorMessage != null ? out.errorMessage : '');
-        System.assert(
-            out.summaryMessage != null && out.summaryMessage.contains('999010'),
-            out.summaryMessage
-        );
+        System.assert(out.summaryMessage != null && out.summaryMessage.contains('999010'), out.summaryMessage);
         System.assert(
             out.summaryMessage != null && out.summaryMessage.contains('no Account in Salesforce'),
             out.summaryMessage
@@ -269,7 +239,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
     // ── Helpers for extended field tests ────────────────────────────────────
 
-    private static String shopJsonWithExtras(Integer shopId, String civility, String channelCode, List<String[]> assignees) {
+    private static String shopJsonWithExtras(Integer shopId, String channelCode, List<String[]> assignees) {
         String channelsPart = '';
         if (String.isNotBlank(channelCode)) {
             channelsPart = ',"channels":["' + channelCode + '"]';
@@ -283,20 +253,15 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
             assigneesPart = ',"assignees":[' + String.join(parts, ',') + ']';
         }
         return '{' +
-            '"shop_id":' + shopId + ',' +
-            '"shop_name":"Extended Shop ' + shopId + '",' +
+            '"shop_id":' +
+            shopId +
+            ',' +
+            '"shop_name":"Extended Shop ' +
+            shopId +
+            '",' +
             '"shipping_country":"DEU",' +
-            '"contact_informations":{' +
-            '"email":"ext_sync_' + shopId + '@example.com",' +
-            '"firstname":"Test","lastname":"User",' +
-            '"civility":"' + (String.isNotBlank(civility) ? civility : 'Mr') + '"' +
-            '},' +
-            '"default_billing_information":{' +
-            '"registration_address":{' +
-            '"city":"Berlin","country_iso_code":"DEU","street_1":"Test St 1","zip_code":"10115"' +
-            '}},' +
             '"commission":{"grid_label":"DE 15%"},' +
-            '"pro_details":{"VAT_number":null,"identification_number":null}' +
+            '"pro_details":{"identification_number":null}' +
             channelsPart +
             assigneesPart +
             '}';
@@ -320,14 +285,13 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         return u;
     }
 
-    // ── Contact.Salutation and Account.SalesChannel__c ─────────────────────
+    // ── Account.SalesChannel__c ────────────────────────────────────────────
 
     @IsTest
-    static void testSyncShopsFromJson_salesChannelAndSalutation() {
+    static void testSyncShopsFromJson_salesChannel() {
         insertStubAccount('999030');
 
-        String json = '{"total_count":1,"shops":[' +
-            shopJsonWithExtras(999030, 'Miss', 'DE', null) + ']}';
+        String json = '{"total_count":1,"shops":[' + shopJsonWithExtras(999030, 'DE', null) + ']}';
 
         Test.startTest();
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
@@ -337,15 +301,6 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
         Account a = [SELECT SalesChannel__c FROM Account WHERE MerchantId__c = '999030'];
         System.assertEquals('Germany', a.SalesChannel__c, 'Channel code DE should map to Germany');
-
-        Contact c = [
-            SELECT Salutation, Title
-            FROM Contact
-            WHERE AccountId = :a.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
-            LIMIT 1
-        ];
-        System.assertEquals('Ms.', c.Salutation, 'Civility Miss should map to Salutation Ms.');
-        System.assertEquals('Miss', c.Title, 'Title should store raw civility value');
     }
 
     // ── Account.AccountManager__c and TechSupportManager__c from assignees ─
@@ -357,11 +312,10 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         User ssUser = createTestUser('ss11', 'ss11_sync@example.com');
 
         List<String[]> assignees = new List<String[]>{
-            new String[]{ 'ACCOUNT_MANAGER', 'am11_sync@example.com' },
-            new String[]{ 'SUPPORT_SPECIALIST', 'ss11_sync@example.com' }
+            new List<String>{ 'ACCOUNT_MANAGER', 'am11_sync@example.com' },
+            new List<String>{ 'SUPPORT_SPECIALIST', 'ss11_sync@example.com' }
         };
-        String json = '{"total_count":1,"shops":[' +
-            shopJsonWithExtras(999031, 'Mr', null, assignees) + ']}';
+        String json = '{"total_count":1,"shops":[' + shopJsonWithExtras(999031, null, assignees) + ']}';
 
         Test.startTest();
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
@@ -370,8 +324,16 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
 
         Account a = [SELECT AccountManager__c, TechSupportManager__c FROM Account WHERE MerchantId__c = '999031'];
-        System.assertEquals(amUser.Id, a.AccountManager__c, 'AccountManager__c should be set from ACCOUNT_MANAGER assignee');
-        System.assertEquals(ssUser.Id, a.TechSupportManager__c, 'TechSupportManager__c should be set from SUPPORT_SPECIALIST assignee');
+        System.assertEquals(
+            amUser.Id,
+            a.AccountManager__c,
+            'AccountManager__c should be set from ACCOUNT_MANAGER assignee'
+        );
+        System.assertEquals(
+            ssUser.Id,
+            a.TechSupportManager__c,
+            'TechSupportManager__c should be set from SUPPORT_SPECIALIST assignee'
+        );
     }
 
     // ── PartnerIntegration__c.OwnerId from ONBOARDING_MANAGER assignee ─────
@@ -385,10 +347,9 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         insert pi;
 
         List<String[]> assignees = new List<String[]>{
-            new String[]{ 'ONBOARDING_MANAGER', 'om12_sync@example.com' }
+            new List<String>{ 'ONBOARDING_MANAGER', 'om12_sync@example.com' }
         };
-        String json = '{"total_count":1,"shops":[' +
-            shopJsonWithExtras(999032, 'Mr', null, assignees) + ']}';
+        String json = '{"total_count":1,"shops":[' + shopJsonWithExtras(999032, null, assignees) + ']}';
 
         Test.startTest();
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
@@ -396,73 +357,194 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
 
         System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
 
-        PartnerIntegration__c updated = [SELECT OwnerId FROM PartnerIntegration__c WHERE Id = :pi.Id];
+        PartnerIntegration__c updated = [SELECT OwnerId, MerchantId__c FROM PartnerIntegration__c WHERE Id = :pi.Id];
         System.assertEquals(omUser.Id, updated.OwnerId, 'PI OwnerId should be set from ONBOARDING_MANAGER assignee');
+        System.assertEquals('999032', updated.MerchantId__c, 'PI MerchantId__c should be set from shop_id');
     }
 
-    @IsTest
-    static void testSyncShopsFromJson_combinedRoleContact_isFound() {
-        Account acc = insertStubAccount('999041');
-        Contact pre = new Contact(
-            AccountId = acc.Id,
-            FirstName = 'Pre',
-            LastName = 'Existing',
-            Email = 'pre@example.com',
-            RoleMarketplace__c = 'Sales Contact;Mirakl Invitation'
-        );
-        insert pre;
+    // ── Full shop JSON with all new fields ───────────────────────────────────
 
-        String json = buildSampleJson(999041);
+    private static String shopJsonFull(Integer shopId) {
+        return '{' +
+            '"shop_id":' +
+            shopId +
+            ',' +
+            '"shop_name":"Full Shop ' +
+            shopId +
+            '",' +
+            '"shop_state":"OPEN",' +
+            '"premium_state":"PREMIUM",' +
+            '"immunity_date":"2026-06-01T00:00:00Z",' +
+            '"closed_from":"2026-07-01T00:00:00Z",' +
+            '"closed_to":"2026-08-01T00:00:00Z",' +
+            '"shipping_country":"DEU",' +
+            '"return_policy":"30 day free returns",' +
+            '"payment_details":{' +
+            '"payment_blocked":true,"paid_balance":0,"payable_balance":0,"pending_balance":0,"pay_subscription":true' +
+            '},' +
+            '"contact_informations":{' +
+            '"web_site":"https://full.example.com"' +
+            '},' +
+            '"commission":{' +
+            '"grid_label":"DE 12%",' +
+            '"linked_to_default_grid":false' +
+            '},' +
+            '"pro_details":{' +
+            '"identification_number":"ID123",' +
+            '"corporate_name":"Full Corp GmbH"' +
+            '},' +
+            '"channels":["DE"],' +
+            '"shipping":{"lead_time_to_ship":3},' +
+            '"shippings":[{' +
+            '"shipping_zone_code":"DE",' +
+            '"shipping_type_label":"Standard",' +
+            '"shipping_type_code":"STD",' +
+            '"additional_fields":[]' +
+            '}],' +
+            '"shop_additional_fields":[' +
+            '{"code":"eudrproducts","value":"true"},' +
+            '{"code":"electronicarticles","value":"true"},' +
+            '{"code":"articleswbatteries","value":"false"},' +
+            '{"code":"batteryreg","value":"12345"},' +
+            '{"code":"weee","value":"WEEE-DE-12345"}' +
+            ']' +
+            '}';
+    }
+
+    // ── shop_state, premium_state, dates, BlockPayment, CommissionCustomRate, CommissionStandardRate ──
+
+    @IsTest
+    static void testSyncShopsFromJson_newAccountFields() {
+        insertStubAccount('999050');
+        String json = '{"total_count":1,"shops":[' + shopJsonFull(999050) + ']}';
+
         Test.startTest();
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
         Test.stopTest();
 
         System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
 
-        List<Contact> contacts = [
-            SELECT Id, RoleMarketplace__c
-            FROM Contact
-            WHERE AccountId = :acc.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
+        Account a = [
+            SELECT
+                SellerAccountStatus__c,
+                PremiumRule__c,
+                ImmunityGrantedUntil__c,
+                ClosedFrom__c,
+                ClosedTo__c,
+                BlockPayment__c,
+                CommissionCustomRate__c,
+                CommissionStandardRate__c
+            FROM Account
+            WHERE MerchantId__c = '999050'
         ];
-        System.assertEquals(1, contacts.size(), 'Exactly one contact with Mirakl Invitation role should exist after sync');
-        System.assert(
-            contacts[0].RoleMarketplace__c.contains('Mirakl Invitation'),
-            'Mirakl Invitation role must be preserved after sync upsert'
-        );
+        System.assertEquals('Open', a.SellerAccountStatus__c);
+        System.assertEquals('Premium', a.PremiumRule__c);
+        System.assertEquals(Date.newInstance(2026, 6, 1), a.ImmunityGrantedUntil__c);
+        System.assertEquals(Date.newInstance(2026, 7, 1), a.ClosedFrom__c);
+        System.assertEquals(Date.newInstance(2026, 8, 1), a.ClosedTo__c);
+        System.assertEquals(true, a.BlockPayment__c);
+        System.assertEquals('DE 12%', a.CommissionCustomRate__c);
+        System.assertEquals('false', a.CommissionStandardRate__c);
     }
 
-    @IsTest
-    static void testSyncShopsFromJson_rolesMergedOnUpdate() {
-        Account acc = insertStubAccount('999042');
-        Contact pre = new Contact(
-            AccountId = acc.Id,
-            FirstName = 'Merge',
-            LastName = 'Test',
-            Email = 'merge@example.com',
-            RoleMarketplace__c = 'Key Account Contact;Mirakl Invitation'
-        );
-        insert pre;
+    // ── shop_additional_fields: eudrproducts, electronicarticles, articleswbatteries, batteryreg, weee ──
 
-        String json = buildSampleJson(999042);
+    @IsTest
+    static void testSyncShopsFromJson_shopAdditionalFields() {
+        insertStubAccount('999051');
+        String json = '{"total_count":1,"shops":[' + shopJsonFull(999051) + ']}';
+
         Test.startTest();
         LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
         Test.stopTest();
 
         System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
 
-        Contact updated = [
-            SELECT RoleMarketplace__c
-            FROM Contact
-            WHERE AccountId = :acc.Id AND RoleMarketplace__c INCLUDES ('Mirakl Invitation')
+        Account a = [
+            SELECT
+                EudrRelevance__c,
+                ElectronicArticles__c,
+                ArticlesWithBatteries__c,
+                BatteryRegistrationNumberGermany__c,
+                WeeeRegistrationNumber__c
+            FROM Account
+            WHERE MerchantId__c = '999051'
+        ];
+        System.assertEquals(true, a.EudrRelevance__c);
+        System.assertEquals(true, a.ElectronicArticles__c);
+        System.assertEquals(false, a.ArticlesWithBatteries__c);
+        System.assertEquals(12345, a.BatteryRegistrationNumberGermany__c);
+        System.assertEquals('WEEE-DE-12345', a.WeeeRegistrationNumber__c);
+    }
+
+    // ── Address__c.AddressCompanyName__c from pro_details.corporate_name ─────
+
+    @IsTest
+    static void testSyncShopsFromJson_addressCompanyName() {
+        insertStubAccount('999052');
+        String json = '{"total_count":1,"shops":[' + shopJsonFull(999052) + ']}';
+
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        Account a = [SELECT Id FROM Account WHERE MerchantId__c = '999052'];
+        Address__c addr = [
+            SELECT AddressCompanyName__c
+            FROM Address__c
+            WHERE Account__c = :a.Id AND AddressType__c = 'Headquarter'
             LIMIT 1
         ];
-        System.assert(
-            updated.RoleMarketplace__c.contains('Key Account Contact'),
-            'Pre-existing roles other than Mirakl Invitation should be preserved after sync'
-        );
-        System.assert(
-            updated.RoleMarketplace__c.contains('Mirakl Invitation'),
-            'Mirakl Invitation role should still be present after sync'
-        );
+        System.assertEquals('Full Corp GmbH', addr.AddressCompanyName__c);
+    }
+
+    // ── Contract: ReturnPolicy, LeadTimeToShip, ShippingCountry, ShippingTypes ──
+
+    @IsTest
+    static void testSyncShopsFromJson_contractFields() {
+        Account acc = insertStubAccount('999053');
+        Contract ct = new Contract(AccountId = acc.Id, Status = 'Draft');
+        insert ct;
+
+        String json = '{"total_count":1,"shops":[' + shopJsonFull(999053) + ']}';
+
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        Contract updated = [
+            SELECT ReturnPolicy__c, LeadTimeToShip__c, ShippingCountry__c, ShippingTypes__c
+            FROM Contract
+            WHERE AccountId = :acc.Id
+            LIMIT 1
+        ];
+        System.assertEquals('30 day free returns', updated.ReturnPolicy__c);
+        System.assertEquals(3, updated.LeadTimeToShip__c);
+        System.assertEquals('Germany', updated.ShippingCountry__c);
+        System.assertEquals('Standard', updated.ShippingTypes__c);
+    }
+
+    // ── PartnerIntegration__c.MerchantId__c from shop_id (no assignee needed) ──
+
+    @IsTest
+    static void testSyncShopsFromJson_partnerIntegrationMerchantId() {
+        Account acc = insertStubAccount('999054');
+        PartnerIntegration__c pi = new PartnerIntegration__c(CompanyName__c = acc.Id);
+        insert pi;
+
+        String json = '{"total_count":1,"shops":[' + shopJsonFull(999054) + ']}';
+
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        PartnerIntegration__c updated = [SELECT MerchantId__c FROM PartnerIntegration__c WHERE Id = :pi.Id];
+        System.assertEquals('999054', updated.MerchantId__c);
     }
 }
