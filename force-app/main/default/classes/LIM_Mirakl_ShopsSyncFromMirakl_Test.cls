@@ -411,11 +411,14 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
             '}';
     }
 
-    // ── shop_state, premium_state, dates, BlockPayment, CommissionCustomRate, CommissionStandardRate ──
+    // ── shop_state, premium_state, dates, BlockPayment; commission.grid_label → Contract.CommissionCustomRate__c ──
 
     @IsTest
     static void testSyncShopsFromJson_newAccountFields() {
-        insertStubAccount('999050');
+        Account acc = insertStubAccount('999050');
+        Contract ct = new Contract(AccountId = acc.Id, Status = 'Draft');
+        insert ct;
+
         String json = '{"total_count":1,"shops":[' + shopJsonFull(999050) + ']}';
 
         Test.startTest();
@@ -431,9 +434,7 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
                 ImmunityGrantedUntil__c,
                 ClosedFrom__c,
                 ClosedTo__c,
-                BlockPayment__c,
-                CommissionCustomRate__c,
-                CommissionStandardRate__c
+                BlockPayment__c
             FROM Account
             WHERE MerchantId__c = '999050'
         ];
@@ -443,8 +444,58 @@ private class LIM_Mirakl_ShopsSyncFromMirakl_Test {
         System.assertEquals(Date.newInstance(2026, 7, 1), a.ClosedFrom__c);
         System.assertEquals(Date.newInstance(2026, 8, 1), a.ClosedTo__c);
         System.assertEquals(true, a.BlockPayment__c);
-        System.assertEquals('DE 12%', a.CommissionCustomRate__c);
-        System.assertEquals('false', a.CommissionStandardRate__c);
+
+        Contract updated = [
+            SELECT CommissionCustomRate__c
+            FROM Contract
+            WHERE AccountId = :acc.Id
+            LIMIT 1
+        ];
+        System.assertEquals('DE 12%', updated.CommissionCustomRate__c);
+    }
+
+    // ── Mirakl omits website / weee / battery / commission → Salesforce fields cleared ──
+
+    @IsTest
+    static void testSyncShopsFromJson_clearsWebsiteWeeeBatteryAndContractCommission() {
+        Account acc = insertStubAccount('999055');
+        acc.Website = 'https://will-be-cleared.example';
+        acc.WeeeRegistrationNumber__c = 'WEEE-OLD';
+        acc.BatteryRegistrationNumberGermany__c = 999;
+        update acc;
+
+        Contract ct = new Contract(
+            AccountId = acc.Id,
+            Status = 'Draft',
+            CommissionCustomRate__c = 'OLD_GRID'
+        );
+        insert ct;
+
+        String minimalShop =
+            '{' +
+            '"shop_id":999055,' +
+            '"shop_name":"Minimal After Clear"' +
+            '}';
+        String json = '{"total_count":1,"shops":[' + minimalShop + ']}';
+
+        Test.startTest();
+        LIM_Mirakl_ShopsSyncFromMirakl.Output out = LIM_Mirakl_ShopsSyncFromMirakl.syncShopsFromJson(json);
+        Test.stopTest();
+
+        System.assertEquals(true, out.success, out.errorMessage != null ? out.errorMessage : '');
+
+        Account a = [
+            SELECT Website, WeeeRegistrationNumber__c, BatteryRegistrationNumberGermany__c, Shopname__c
+            FROM Account
+            WHERE Id = :acc.Id
+        ];
+        System.assertEquals(null, a.Website);
+        System.assertEquals(null, a.WeeeRegistrationNumber__c);
+        System.assertEquals(null, a.BatteryRegistrationNumberGermany__c);
+        System.assertEquals('Minimal After Clear', a.Shopname__c);
+
+        Contract cUp = [SELECT CommissionCustomRate__c FROM Contract WHERE Id = :ct.Id];
+        System.assertEquals(null, cUp.CommissionCustomRate__c);
     }
 
     // ── shop_additional_fields: eudrproducts, electronicarticles, articleswbatteries, batteryreg, weee ──

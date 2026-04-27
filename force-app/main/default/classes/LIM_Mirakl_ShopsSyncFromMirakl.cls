@@ -1,7 +1,7 @@
 /**
  * LIM_Mirakl_ShopsSyncFromMirakl
  * GET /api/shops (or inline JSON), parse Mirakl shops[], **update** existing Account matched by MerchantId__c
- * (no Account insert). Only the 27 Mirakl→Salesforce field mappings documented on the integration spec are synced.
+ * (no Account insert). Mirakl→Salesforce mappings follow the integration spec (Account, Contract, Address, PartnerIntegration).
  * Exposed to Flow via Invocable.
  */
 public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
@@ -150,7 +150,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
     }
 
     @InvocableMethod(
-        description='Syncs Mirakl shops into Salesforce (Account, Address HQ company name, PartnerIntegration, Contract) per integration field spec.'
+        description='Syncs Mirakl shops into Salesforce (Account; Contract including commission.grid_label as CommissionCustomRate__c; Address HQ stub when corporate_name present; PartnerIntegration) per integration field spec.'
     )
     public static List<Output> syncShops(List<Input> inputs) {
         List<Output> results = new List<Output>();
@@ -675,22 +675,8 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         }
 
         Map<String, Object> contactInfo = childMap(shop, 'contact_informations');
-        if (contactInfo != null) {
-            a.Website = stringVal(contactInfo.get('web_site'));
-        }
+        a.Website = contactInfo == null ? null : stringVal(contactInfo.get('web_site'));
         a.CommercialCountry__c = toCommercialCountry(stringVal(shop.get('shipping_country')));
-
-        Map<String, Object> commission = childMap(shop, 'commission');
-        if (commission != null) {
-            String gridLabel = stringVal(commission.get('grid_label'));
-            if (String.isNotBlank(gridLabel)) {
-                a.CommissionCustomRate__c = gridLabel;
-            }
-            String linkedToDefault = stringVal(commission.get('linked_to_default_grid'));
-            if (linkedToDefault != null) {
-                a.CommissionStandardRate__c = linkedToDefault;
-            }
-        }
 
         Map<String, Object> proDetails = childMap(shop, 'pro_details');
         if (proDetails != null) {
@@ -702,10 +688,7 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         }
 
         List<Object> additionalFields = (List<Object>) shop.get('shop_additional_fields');
-        String weeeOnly = extractAdditionalField(additionalFields, 'weee');
-        if (String.isNotBlank(weeeOnly)) {
-            a.WeeeRegistrationNumber__c = weeeOnly;
-        }
+        a.WeeeRegistrationNumber__c = extractAdditionalField(additionalFields, 'weee');
 
         String shopState = stringVal(shop.get('shop_state'));
         if (String.isNotBlank(shopState)) {
@@ -737,12 +720,14 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
         if (batteries != null)
             a.ArticlesWithBatteries__c = batteries;
         String batteryReg = extractAdditionalField(additionalFields, 'batteryreg');
+        Decimal batteryDec = null;
         if (String.isNotBlank(batteryReg)) {
             try {
-                a.BatteryRegistrationNumberGermany__c = Decimal.valueOf(batteryReg);
+                batteryDec = Decimal.valueOf(batteryReg);
             } catch (Exception e) {
             }
         }
+        a.BatteryRegistrationNumberGermany__c = batteryDec;
 
         return a;
     }
@@ -849,6 +834,10 @@ public with sharing class LIM_Mirakl_ShopsSyncFromMirakl {
     private static Contract buildContract(Map<String, Object> shop, Id accountId) {
         Contract c = new Contract();
         c.AccountId = accountId;
+
+        Map<String, Object> commission = childMap(shop, 'commission');
+        String gridForContract = commission == null ? null : stringVal(commission.get('grid_label'));
+        c.CommissionCustomRate__c = String.isNotBlank(gridForContract) ? gridForContract : null;
 
         String returnPolicy = stringVal(shop.get('return_policy'));
         if (String.isNotBlank(returnPolicy)) {
