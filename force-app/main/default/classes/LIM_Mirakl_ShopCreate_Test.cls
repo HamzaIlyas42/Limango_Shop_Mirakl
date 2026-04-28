@@ -172,9 +172,9 @@ private class LIM_Mirakl_ShopCreate_Test {
             'Request should include Mirakl channels from SalesChannel__c'
         );
         System.assert(
-            results[0].requestJson.contains('shop_additional_fields') &&
+            results[0].requestJson.contains('"code":"sla"') &&
             results[0].requestJson.contains('Contract SLA body text'),
-            'Request should include shop_additional_fields from Contract Sla__c'
+            'Request should include shop_additional_fields with code sla from Contract Sla__c'
         );
         System.assert(
             results[0].requestJson.contains('"is_professional":true'),

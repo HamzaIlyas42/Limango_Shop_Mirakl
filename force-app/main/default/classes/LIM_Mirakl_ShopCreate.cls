@@ -128,7 +128,7 @@ public with sharing class LIM_Mirakl_ShopCreate {
      * Must match a SHOP additional field in the Mirakl operator (see GET /api/additional_fields?entities=SHOP).
      * Change here if your operator uses a different code than the default.
      */
-    private static final String MIRAKL_SHOP_SERVICE_AGREEMENTS_FIELD_CODE = 'service_agreements';
+    private static final String MIRAKL_SHOP_SERVICE_AGREEMENTS_FIELD_CODE = 'sla';
 
     // ── Input ─────────────────────────────────────────────
     public class Input {
